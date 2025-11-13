@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -71,7 +73,10 @@ fun Navigation() {
             OnboardingScreen(navController = navController)
         }
         composable("login") {
-            LoginScreen()
+            LoginScreen(navController = navController)
+        }
+        composable("signup") {
+            SignUpScreen(navController = navController)
         }
     }
 }
@@ -216,14 +221,198 @@ fun OnboardingScreen(navController: NavController) {
 }
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val SmartFitOrange = Color(0xFFFF9800)
+
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = "Login Screen")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // App Title or Logo
+            Image(
+                painter = painterResource(id = R.drawable.smartfitlogo),
+                contentDescription = "SmartFit Logo",
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "Welcome Back!",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = SmartFitOrange,
+
+                )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Email TextField
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(0.9f)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Password TextField
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(0.9f)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Login Button
+            Button(
+                onClick = { /* TODO: Handle login logic */ },
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            listOf(Color(0xFFFFC107), Color(0xFFFF9800)) // yellow → orange
+                        )
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text(
+                    "Login",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sign Up Redirect
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Don’t have an account?")
+                TextButton(onClick = { navController.navigate("signup") }) {
+                    Text(
+                        text = "Sign Up",
+                        color = SmartFitOrange,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
+
+@Composable
+fun SignUpScreen(navController: NavController) {
+    val SmartFitOrange = Color(0xFFFF9800)
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+            Text(
+                text = "Create Account",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = SmartFitOrange
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(0.9f)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(0.9f)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(0.9f)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    // Later, we’ll save this using DataStore
+                    navController.navigate("Sign up") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            listOf(Color(0xFFFFC107), Color(0xFFFF9800))
+                        )
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text("Sign Up", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(onClick = {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }) {
+                Text("Already have an account? Login", color = SmartFitOrange)
+            }
+        }
+    }
+}
+
+
 
 @Preview(showBackground = true)
 @Composable
@@ -237,6 +426,14 @@ fun OnboardingScreenPreview() {
 @Composable
 fun LoginScreenPreview() {
     SmartfitTheme {
-        LoginScreen()
+        LoginScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignUpScreenPreview() {
+    SmartfitTheme {
+        SignUpScreen(navController = rememberNavController())
     }
 }
