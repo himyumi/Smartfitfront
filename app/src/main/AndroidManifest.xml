@@ -12,12 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Smartfit">
         <activity
-            android:name=".MainActivity2"
-            android:exported="false"
-            android:label="@string/title_activity_main2"
-            android:theme="@style/Theme.Smartfit" />
-        <activity
-            android:name=".MainActivity"
+            android:name=".LoginSignInScreen"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Smartfit">
@@ -27,6 +22,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity3"
+            android:exported="false"
+            android:label="@string/title_activity_main3"
+            android.theme="@style/Theme.Smartfit" />
+        <activity
+            android:name=".MainActivity2"
+            android:exported="false"
+            android:label="@string/title_activity_main2"
+            android:theme="@style/Theme.Smartfit" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Smartfit" />
     </application>
 
 </manifest>

@@ -50,7 +50,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.smartfit.ui.theme.SmartfitTheme
 import kotlinx.coroutines.delay
 
-class MainActivity : ComponentActivity() {
+class LoginSignInScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -77,6 +77,13 @@ fun Navigation() {
         }
         composable("signup") {
             SignUpScreen(navController = navController)
+        }
+        composable("home") {
+            MainScreen(onLogout = {
+                navController.navigate("login") {
+                    popUpTo("home") { inclusive = true }
+                }
+            })
         }
     }
 }
@@ -284,7 +291,9 @@ fun LoginScreen(navController: NavController) {
 
             // Login Button
             Button(
-                onClick = { /* TODO: Handle login logic */ },
+                onClick = { navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                } },
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .height(50.dp)
@@ -381,8 +390,8 @@ fun SignUpScreen(navController: NavController) {
             Button(
                 onClick = {
                     // Later, we’ll save this using DataStore
-                    navController.navigate("Sign up") {
-                        popUpTo("login") { inclusive = true }
+                    navController.navigate("login") {
+                        popUpTo("signup") { inclusive = true }
                     }
                 },
                 modifier = Modifier
@@ -402,9 +411,7 @@ fun SignUpScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = {
-                navController.navigate("login") {
-                    popUpTo("login") { inclusive = true }
-                }
+                navController.popBackStack()
             }) {
                 Text("Already have an account? Login", color = SmartFitOrange)
             }
