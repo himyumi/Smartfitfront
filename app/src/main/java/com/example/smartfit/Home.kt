@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -159,45 +157,28 @@ fun HomeScreen(navController: NavController) {
     var bmiResult by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
     var bmiCategory by remember { mutableStateOf("") }
-    var selectedTab by remember { mutableStateOf("Suggestions") }
-
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp)
+            .padding(24.dp)
             .verticalScroll(scrollState)
     ) {
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        // Welcome Text Only
+        Text(
+            "Welcome,",
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFF9800),
+            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
+        )
 
-            Image(
-                painter = painterResource(id = R.drawable.user1),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = "Hi,",
-                fontSize = 34.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF9800),
-                style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(70.dp))
 
         // Steps Tracker Card
         Card(
-            shape = RoundedCornerShape(17.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = cardColors(containerColor = Color(0xFFFF9800)),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -330,83 +311,6 @@ fun HomeScreen(navController: NavController) {
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-// Suggestions / History Section (Separated)
-        Card(
-            shape = RoundedCornerShape(32.dp),
-            colors = cardColors(containerColor = Color.White),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-
-                // Selector pill
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .background(
-                            color = Color(0xFFF2F2F2),
-                            shape = RoundedCornerShape(28.dp)
-                        )
-                        .padding(6.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SelectorItem(
-                            text = "Suggestions",
-                            isSelected = selectedTab == "Suggestions",
-                            onClick = { selectedTab = "Suggestions" }
-                        )
-                        SelectorItem(
-                            text = "History",
-                            isSelected = selectedTab == "History",
-                            onClick = { selectedTab = "History" }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Empty content area (for now)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                )
-            }
-        }
-
-    }
-}
-
-@Composable
-fun RowScope.SelectorItem(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(24.dp))
-            .background(
-                if (isSelected) Color(0xFFFF9800) else Color.Transparent
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) Color.White else Color.Black
-        )
     }
 }
 
