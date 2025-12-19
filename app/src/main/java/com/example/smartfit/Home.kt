@@ -25,15 +25,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults.cardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -53,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -131,7 +133,7 @@ fun MainScreen(onLogout: () -> Unit) {
         ) {
             composable("home") { HomeScreen(navController) }
             composable("goals") { DailyGoalsScreen(navController) }
-            composable("activity_log") { ActivityLogScreen() }
+            composable("activity_log") { ActivityLogScreen(navController) }
             composable("profile") { ProfileScreen(navController, onLogout) }
             composable(
                 route = "savedGoals/{steps}/{calories}/{water}",
@@ -158,155 +160,164 @@ fun HomeScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     var bmiCategory by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(scrollState)
-    ) {
-
-        // Welcome Text Only
-        Text(
-            "Welcome,",
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF9800),
-            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.background1),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
 
-        Spacer(modifier = Modifier.height(70.dp))
-
-        // Steps Tracker Card
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(scrollState)
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    "Steps Tracker",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .background(
-                            brush = Brush.horizontalGradient(listOf(Color(0xFFFCF9F9), Color(0xFFF5F5F5))),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                ) {}
-            }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            // Welcome Text Only
+            Text(
+                "Welcome,",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White, // Changed for better visibility on a background
+                style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
+            )
 
-        // BMI Calculator Card
-        Card(
-            shape = RoundedCornerShape(30.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            Spacer(modifier = Modifier.height(70.dp))
+
+            // Steps Tracker Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x99FF9800)), // Semi-transparent
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    "Bmi Calculator",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    color = Color.White
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text("Weight (kg)", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = weight,
-                    onValueChange = { weight = it },
-                    label = { Text(text = "Enter your weight in kg") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        "Steps Tracker",
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text("Height (cm)", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = height,
-                    onValueChange = { height = it },
-                    label = { Text(text = "Enter your height in centimeters") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                    )
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Button(
-                        onClick = {
-                            val weightF = weight.text.toFloatOrNull() ?: 0f
-                            val heightF = height.text.toFloatOrNull() ?: 0f
-
-                            if (weightF > 0 && heightF > 0) {
-                                val heightM = heightF / 100f   // convert cm → meters
-                                val bmi = weightF / (heightM * heightM)
-                                bmiResult = String.format("%.2f", bmi)
-
-                                bmiCategory = when {
-                                    bmi < 18.5 -> "Underweight"
-                                    bmi < 24.9 -> "Normal"
-                                    bmi < 29.9 -> "Overweight"
-                                    else -> "Obese"
-                                }
-                            }
-
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
                         modifier = Modifier
-                            .height(45.dp)
-                            .width(120.dp)
-                    ) {
-                        Text("Calculate", color = Color.White)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(listOf(Color(0xAAFCF9F9), Color(0xAAF5F5F5))),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                    ) {}
+                }
+            }
 
-                    Column {
-                        Text(
-                            "BMI: $bmiResult",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // BMI Calculator Card
+            Card(
+                shape = RoundedCornerShape(30.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x99FF9800)), // Semi-transparent
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        "Bmi Calculator",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text("Weight (kg)", fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        value = weight,
+                        onValueChange = { weight = it },
+                        label = { Text(text = "Enter your weight in kg") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
                         )
-                        Text(
-                            "You are: $bmiCategory",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text("Height (cm)", fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        value = height,
+                        onValueChange = { height = it },
+                        label = { Text(text = "Enter your height in centimeters") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
                         )
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Button(
+                            onClick = {
+                                val weightF = weight.text.toFloatOrNull() ?: 0f
+                                val heightF = height.text.toFloatOrNull() ?: 0f
+
+                                if (weightF > 0 && heightF > 0) {
+                                    val heightM = heightF / 100f   // convert cm → meters
+                                    val bmi = weightF / (heightM * heightM)
+                                    bmiResult = String.format("%.2f", bmi)
+
+                                    bmiCategory = when {
+                                        bmi < 18.5 -> "Underweight"
+                                        bmi < 24.9 -> "Normal"
+                                        bmi < 29.9 -> "Overweight"
+                                        else -> "Obese"
+                                    }
+                                }
+
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
+                            modifier = Modifier
+                                .height(45.dp)
+                                .width(120.dp)
+                        ) {
+                            Text("Calculate", color = Color.White)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Column {
+                            Text(
+                                "BMI: $bmiResult",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                "You are: $bmiCategory",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
             }
@@ -321,135 +332,151 @@ fun DailyGoalsScreen(navController: NavController) {
     var waterGoal by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Daily Goals", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF9800))
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.background2), // Add your image here
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "Motivational Quote",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "\"Talent without hardwork is nothing\"",
-                    fontSize = 18.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.quote),
-                    contentDescription = "Quote icon",
-                    modifier = Modifier.fillMaxWidth().height(200.dp)
-                )
-            }
-        }
+            Text("Daily Goals", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp).fillMaxWidth()
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x99FF9800)), // Semi-transparent
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Set Your Daily Goals",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Steps Goal", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = stepsGoal,
-                    onValueChange = { stepsGoal = it },
-                    singleLine = true,
-                    label = { Text("Enter steps goal") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                    )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Calories Goal", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = caloriesGoal,
-                    onValueChange = { caloriesGoal = it },
-                    singleLine = true,
-                    label = { Text("Enter calories goal") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                    )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Water Goal (cups)", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = waterGoal,
-                    onValueChange = { waterGoal = it },
-                    singleLine = true,
-                    label = { Text("Enter water goal") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                    )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Save Goals", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Motivational Quote",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "\"Talent without hardwork is nothing\"",
+                        fontSize = 18.sp,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.quote),
+                        contentDescription = "Quote icon",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x99FF9800)), // Semi-transparent
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Set Your Daily Goals",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Steps Goal", fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        value = stepsGoal,
+                        onValueChange = { stepsGoal = it },
+                        singleLine = true,
+                        label = { Text("Enter steps goal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Calories Goal", fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        value = caloriesGoal,
+                        onValueChange = { caloriesGoal = it },
+                        singleLine = true,
+                        label = { Text("Enter calories goal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Water Goal (cups)", fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        value = waterGoal,
+                        onValueChange = { waterGoal = it },
+                        singleLine = true,
+                        label = { Text("Enter water goal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                    ) {
+                        Text("Save Goals", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -473,7 +500,7 @@ fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String)
         Spacer(modifier = Modifier.height(30.dp))
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
@@ -490,251 +517,289 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        // Profile Image
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.user1), // YOUR PROFILE PIC
-            contentDescription = "Profile Picture",
+            painter = painterResource(id = R.drawable.background1), // Add your image here
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Column(
             modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)   // makes it circular
-                .background(Color.LightGray)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Title
-        Text(
-            text = "Account Settings",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF9800)
-        )
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        // Change Password Section
-        Text(
-            text = "Change Password",
-            color = Color(0xFFFF9800),
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // New Password
-        OutlinedTextField(
-            value = newPassword,
-            onValueChange = { newPassword = it },
-            label = { Text("New Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Confirm Password
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirm Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Save Button
-        Button(
-            onClick = {
-                // TODO: Add password saving logic
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(30.dp)
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Save Password", color = Color.White, fontWeight = FontWeight.Bold)
-        }
 
-        Spacer(modifier = Modifier.height(40.dp))
+            // Profile Image
+            Image(
+                painter = painterResource(id = R.drawable.user1), // YOUR PROFILE PIC
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)   // makes it circular
+                    .background(Color.LightGray)
+            )
 
-        // Logout Button
-        Button(
-            onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(30.dp)
-        ) {
-            Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Title
+            Text(
+                text = "Account Settings",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            // Change Password Section
+            Text(
+                text = "Change Password",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val textFieldColors = TextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color.White,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.White,
+                unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+            )
+
+            // New Password
+            OutlinedTextField(
+                value = newPassword,
+                onValueChange = { newPassword = it },
+                label = { Text("New Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = textFieldColors
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Confirm Password
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirm Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = textFieldColors
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Save Button
+            Button(
+                onClick = {
+                    // TODO: Add password saving logic
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(30.dp)
+            ) {
+                Text("Save Password", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Logout Button
+            Button(
+                onClick = onLogout,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(30.dp)
+            ) {
+                Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
 
 @Composable
-fun ActivityLogScreen() {
+fun ActivityLogScreen(navController: NavController) {
     var activityName by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var calories by remember { mutableStateOf("") }
     var activities by remember { mutableStateOf(listOf<ActivityItem>()) }
     var editingActivity by remember { mutableStateOf<ActivityItem?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // --- FORM --- //
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800))
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.background3), // Add your image here
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // --- FORM --- //
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x99FF9800)) // Semi-transparent
             ) {
-                Text(
-                    text = if (editingActivity == null) "Add Activity" else "Edit Activity",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (editingActivity == null) "Add Activity" else "Edit Activity",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                val textFieldColors = TextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = Color.White,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.White,
-                    unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                )
+                    val textFieldColors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.White,
+                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                    )
 
-                OutlinedTextField(
-                    value = activityName,
-                    onValueChange = { activityName = it },
-                    label = { Text("Activity Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = textFieldColors
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = duration,
-                    onValueChange = { duration = it },
-                    label = { Text("Duration (minutes)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = textFieldColors
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = calories,
-                    onValueChange = { calories = it },
-                    label = { Text("Calories Burned") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = textFieldColors
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = activityName,
+                        onValueChange = { activityName = it },
+                        label = { Text("Activity Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = textFieldColors
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = duration,
+                        onValueChange = { duration = it },
+                        label = { Text("Duration (minutes)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = textFieldColors
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = calories,
+                        onValueChange = { calories = it },
+                        label = { Text("Calories Burned") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = textFieldColors
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Row {
-                    Button(
-                        onClick = {
-                            if (editingActivity == null) { // ADD
-                                val newActivity = ActivityItem(name = activityName, duration = duration, calories = calories)
-                                activities = activities + newActivity
-                            } else { // UPDATE
-                                val updatedActivity = editingActivity!!.copy(name = activityName, duration = duration, calories = calories)
-                                activities = activities.map { if (it.id == editingActivity!!.id) updatedActivity else it }
-                            }
-                            // Reset fields
-                            activityName = ""
-                            duration = ""
-                            calories = ""
-                            editingActivity = null
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
-                    ) {
-                        Text(if (editingActivity == null) "Add Activity" else "Update Activity", color = Color.White)
-                    }
-                    if (editingActivity != null) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                    Row {
                         Button(
-                            onClick = { // CANCEL
+                            onClick = {
+                                if (editingActivity == null) { // ADD
+                                    val newActivity = ActivityItem(name = activityName, duration = duration, calories = calories)
+                                    activities = activities + newActivity
+                                } else { // UPDATE
+                                    val updatedActivity = editingActivity!!.copy(name = activityName, duration = duration, calories = calories)
+                                    activities = activities.map { if (it.id == editingActivity!!.id) updatedActivity else it }
+                                }
+                                // Reset fields
                                 activityName = ""
                                 duration = ""
                                 calories = ""
                                 editingActivity = null
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6D4C41))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
                         ) {
-                            Text("Cancel", color = Color.White)
+                            Text(if (editingActivity == null) "Add Activity" else "Update Activity", color = Color.White)
+                        }
+                        if (editingActivity != null) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { // CANCEL
+                                    activityName = ""
+                                    duration = ""
+                                    calories = ""
+                                    editingActivity = null
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6D4C41))
+                            ) {
+                                Text("Cancel", color = Color.White)
+                            }
                         }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // --- LIST --- //
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(activities) { activity ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = cardColors(containerColor = Color(0xFFFF9800))
-                ) {
-                    Row(
+            // --- LIST --- //
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(items = activities, key = { it.id }) { activity ->
+                    Card(
                         modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0x99FF9800)) // Semi-transparent
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(activity.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
-                            Text("${activity.duration} min - ${activity.calories} cal", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
-                        }
-                        Row {
-                            Button(onClick = { // EDIT
-                                editingActivity = activity
-                                activityName = activity.name
-                                duration = activity.duration
-                                calories = activity.calories
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
-                            ) {
-                                Text("Edit", color = Color.White)
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(activity.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
+                                Text("${activity.duration} min - ${activity.calories} cal", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { // DELETE
-                                activities = activities - activity
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF773030)) // Red for delete
-                            ) {
-                                Text("Delete", color = Color.White)
+                            Row {
+                                Button(onClick = { // EDIT
+                                    editingActivity = activity
+                                    activityName = activity.name
+                                    duration = activity.duration
+                                    calories = activity.calories
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                                ) {
+                                    Text("Edit", color = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(onClick = { // DELETE
+                                    if (editingActivity?.id == activity.id) {
+                                        activityName = ""
+                                        duration = ""
+                                        calories = ""
+                                        editingActivity = null
+                                    }
+                                    activities = activities - activity
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)) // Red for delete
+                                ) {
+                                    Text("Delete", color = Color.White)
+                                }
                             }
                         }
                     }
