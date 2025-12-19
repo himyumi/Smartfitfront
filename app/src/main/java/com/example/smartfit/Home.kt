@@ -73,7 +73,7 @@ import com.example.smartfit.ui.theme.SmartfitTheme
 import java.util.UUID
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material3.CardDefaults
-
+import androidx.compose.ui.layout.ContentScale
 
 
 data class ActivityItem(val id: String = UUID.randomUUID().toString(), val name: String, val duration: String, val calories: String)
@@ -122,7 +122,7 @@ fun MainScreen(onLogout: () -> Unit) {
                             selectedTextColor = Color.White,
                             unselectedIconColor = Color.Gray,
                             unselectedTextColor = Color.Gray,
-                            indicatorColor = Color(0xFFFF9800)
+                            indicatorColor = MaterialTheme.colorScheme.primary
                         )
                     )
                 }
@@ -162,6 +162,15 @@ fun HomeScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     var bmiCategory by remember { mutableStateOf("") }
 
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Image(
+            painter = painterResource(id = R.drawable.background2),
+            contentDescription = "App Background",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -196,7 +205,7 @@ fun HomeScreen(navController: NavController) {
                         text = "Hi,",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFF9800)
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Spacer(modifier = Modifier.width(2.dp))
@@ -205,7 +214,7 @@ fun HomeScreen(navController: NavController) {
                         text = "James",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Gray
+                        color = Color.White
                     )
                 }
             }
@@ -226,7 +235,7 @@ fun HomeScreen(navController: NavController) {
         // Steps Tracker Card
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary), //light orange
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
@@ -242,7 +251,12 @@ fun HomeScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(100.dp)
                         .background(
-                            brush = Brush.horizontalGradient(listOf(Color(0xFFFCF9F9), Color(0xFFF5F5F5))),
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.surface
+                                )
+                            ),
                             shape = RoundedCornerShape(10.dp)
                         )
                 ) {}
@@ -254,7 +268,7 @@ fun HomeScreen(navController: NavController) {
         // BMI Calculator Card
         Card(
             shape = RoundedCornerShape(30.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -334,7 +348,7 @@ fun HomeScreen(navController: NavController) {
 
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
                         modifier = Modifier
                             .height(45.dp)
                             .width(120.dp)
@@ -364,7 +378,8 @@ fun HomeScreen(navController: NavController) {
         Text(
             text = "Your Plan",
             fontSize = 30.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -374,7 +389,7 @@ fun HomeScreen(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF3F3F3), RoundedCornerShape(50.dp))
+                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(50.dp))
                 .padding(6.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -384,7 +399,9 @@ fun HomeScreen(navController: NavController) {
                         .weight(1f)
                         .clip(RoundedCornerShape(50.dp))
                         .background(
-                            if (selectedTab == tab) Color.White else Color.Transparent
+                            if (selectedTab == tab)
+                                MaterialTheme.colorScheme.primary
+                            else Color.Transparent
                         )
                         .clickable { selectedTab = tab }
                         .padding(vertical = 10.dp),
@@ -393,7 +410,7 @@ fun HomeScreen(navController: NavController) {
                     Text(
                         text = tab,
                         fontWeight = FontWeight.Bold,
-                        color = if (selectedTab == tab) Color.Black else Color.Gray
+                        color = if (selectedTab == tab) Color.White else MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -409,6 +426,13 @@ fun DailyGoalsScreen(navController: NavController) {
     var waterGoal by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
 
+    Image(
+        painter = painterResource(id = R.drawable.background2),
+        contentDescription = "App Background",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize()
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -416,13 +440,13 @@ fun DailyGoalsScreen(navController: NavController) {
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Daily Goals", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF9800))
+        Text("Daily Goals", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -457,7 +481,7 @@ fun DailyGoalsScreen(navController: NavController) {
 
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
         ) {
             Column(
@@ -535,7 +559,8 @@ fun DailyGoalsScreen(navController: NavController) {
                         navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                    .copy(contentColor = Color.White)
                 ) {
                     Text("Save Goals", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -546,6 +571,14 @@ fun DailyGoalsScreen(navController: NavController) {
 
 @Composable
 fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String) {
+
+    Image(
+        painter = painterResource(id = R.drawable.background2),
+        contentDescription = "App Background",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize()
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -556,12 +589,12 @@ fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String)
             "Today's Goals",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF9800)
+            color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(30.dp))
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800)),
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
@@ -579,6 +612,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
     var confirmPassword by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
+
 
     val bmi by remember {
         derivedStateOf {
@@ -631,7 +665,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
             text = "Account Settings",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF9800)
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -639,7 +673,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
         // Change Password Section
         Text(
             text = "Change Password",
-            color = Color(0xFFFF9800),
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
         )
@@ -673,7 +707,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
             onClick = {
                 // TODO: Add password saving logic
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -687,7 +721,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
         // Logout Button
         Button(
             onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -701,7 +735,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
             text = "Body Information",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF9800)
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -730,7 +764,7 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -767,6 +801,13 @@ fun ActivityLogScreen() {
     var activities by remember { mutableStateOf(listOf<ActivityItem>()) }
     var editingActivity by remember { mutableStateOf<ActivityItem?>(null) }
 
+    Image(
+        painter = painterResource(id = R.drawable.background2),
+        contentDescription = "App Background",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize()
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -776,7 +817,7 @@ fun ActivityLogScreen() {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = cardColors(containerColor = Color(0xFFFF9800))
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -848,7 +889,7 @@ fun ActivityLogScreen() {
                             editingActivity = null
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Text(if (editingActivity == null) "Add Activity" else "Update Activity", color = Color.White)
                     }
@@ -862,7 +903,7 @@ fun ActivityLogScreen() {
                                 editingActivity = null
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6D4C41))
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                         ) {
                             Text("Cancel", color = Color.White)
                         }
@@ -881,7 +922,7 @@ fun ActivityLogScreen() {
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = cardColors(containerColor = Color(0xFFFF9800))
+                    colors = cardColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Row(
                         modifier = Modifier
@@ -901,7 +942,7 @@ fun ActivityLogScreen() {
                                 duration = activity.duration
                                 calories = activity.calories
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                             ) {
                                 Text("Edit", color = Color.White)
                             }
@@ -909,7 +950,7 @@ fun ActivityLogScreen() {
                             Button(onClick = { // DELETE
                                 activities = activities - activity
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF773030)) // Red for delete
+                            colors = ButtonDefaults.buttonColors(containerColor =  MaterialTheme.colorScheme.error) // Red for delete
                             ) {
                                 Text("Delete", color = Color.White)
                             }

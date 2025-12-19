@@ -12,15 +12,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Orange40,
     secondary = OrangeGrey80,
-    tertiary = Brown80
+    tertiary = Brown80,
+    background = DarkBackground,    // The 0xFF121212 color
+    surface = DarkBackground,       // Cards will take this bg by default if not overridden
+    onPrimary = BlackText,          // Black text looks better on Orange80
+    onBackground = WhiteText,       // White text on Dark background
+    onSurface = WhiteText
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Orange40,
+    secondaryContainer= Orange80, // Your main 0xFFFF9800 orange
+    tertiaryContainer = Yellow40,
     secondary = OrangeGrey40,
-    tertiary = Brown40
+    error = red40,
+    tertiary = Brown40,
+    background = LightBackground,   // White
+    surface = LightBackground,
+    onPrimary = WhiteText,          // White text on deep Orange
+    onBackground = BlackText,       // Black text on White background
+    onSurface = BlackText
+
+
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -37,7 +51,7 @@ private val LightColorScheme = lightColorScheme(
 fun SmartfitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
