@@ -71,6 +71,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.smartfit.ui.theme.SmartfitTheme
 import java.util.UUID
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material3.CardDefaults
+
+
 
 data class ActivityItem(val id: String = UUID.randomUUID().toString(), val name: String, val duration: String, val calories: String)
 
@@ -166,15 +170,58 @@ fun HomeScreen(navController: NavController) {
     ) {
 
         // Welcome Text Only
-        Text(
-            "Welcome,",
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF9800),
-            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.user1),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                )
 
-        Spacer(modifier = Modifier.height(70.dp))
+                Spacer(modifier = Modifier.width(5.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Hi,",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF9800)
+                    )
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    Text(
+                        text = "James",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+
+            Image(
+                painter = painterResource(id = R.drawable.user1), // add image to drawable
+                contentDescription = "Profile",
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+            )
+        }
+
+
+        Spacer(modifier = Modifier.height(45.dp))
 
         // Steps Tracker Card
         Card(
@@ -311,6 +358,47 @@ fun HomeScreen(navController: NavController) {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(34.dp))
+
+        Text(
+            text = "Your Plan",
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        var selectedTab by remember { mutableStateOf("Activity") }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF3F3F3), RoundedCornerShape(50.dp))
+                .padding(6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            listOf("Activity", "Suggestions").forEach { tab ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(
+                            if (selectedTab == tab) Color.White else Color.Transparent
+                        )
+                        .clickable { selectedTab = tab }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tab,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedTab == tab) Color.Black else Color.Gray
+                    )
+                }
+            }
+        }
+
     }
 }
 
@@ -489,6 +577,34 @@ fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String)
 fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+
+    val bmi by remember {
+        derivedStateOf {
+            val w = weight.toFloatOrNull()
+            val h = height.toFloatOrNull()
+
+            if (w != null && h != null && h > 0f) {
+                val heightM = h / 100f
+                w / (heightM * heightM)
+            } else {
+                null
+            }
+        }
+    }
+
+    val bmiCategory by remember {
+        derivedStateOf {
+            when {
+                bmi == null -> ""
+                bmi!! < 18.5 -> "Underweight"
+                bmi!! < 24.9 -> "Normal"
+                bmi!! < 29.9 -> "Overweight"
+                else -> "Obese"
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -579,6 +695,67 @@ fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
         ) {
             Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
         }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Body Information",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFF9800)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = weight,
+            onValueChange = { weight = it },
+            label = { Text("Weight (kg)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = height,
+            onValueChange = { height = it },
+            label = { Text("Height (cm)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        if (bmi != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "BMI: ${String.format("%.2f", bmi)}",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = bmiCategory,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+
     }
 }
 
