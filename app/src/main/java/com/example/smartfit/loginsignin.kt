@@ -7,6 +7,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,16 +55,17 @@ class LoginSignInScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SmartfitTheme {
-                Navigation()
+            val systemTheme = isSystemInDarkTheme()
+            var isDarkTheme by remember { mutableStateOf(systemTheme) }
+            SmartfitTheme(darkTheme = isDarkTheme) {
+                Navigation(isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it })
             }
         }
     }
 }
 
 @Composable
-fun Navigation() {
-
+fun Navigation(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
@@ -79,11 +81,15 @@ fun Navigation() {
             SignUpScreen(navController = navController)
         }
         composable("home") {
-            MainScreen(onLogout = {
-                navController.navigate("login") {
-                    popUpTo("home") { inclusive = true }
-                }
-            })
+            MainScreen(
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+                isDarkTheme = isDarkTheme,
+                onThemeChange = onThemeChange
+            )
         }
     }
 }
@@ -147,13 +153,13 @@ fun OnboardingScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xAA000000))
+                .background(Color.Black.copy(alpha = 0.6f))
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = pages[page].title,
-                color = Color(0xFFFF9800),
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -173,7 +179,7 @@ fun OnboardingScreen(navController: NavController) {
             ) {
                 repeat(pages.size) { index ->
                     val color =
-                        if (index == page) Color(0xFFFF9800) else Color.LightGray
+                        if (index == page) MaterialTheme.colorScheme.primary else Color.LightGray
                     Box(
                         modifier = Modifier
                             .padding(5.dp)
@@ -201,7 +207,7 @@ fun OnboardingScreen(navController: NavController) {
                     .clip(RoundedCornerShape(50))
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(Color(0xFFFF9800), Color(0xFFFFB74D))
+                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiaryContainer)
                         )
                     ),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
@@ -221,7 +227,7 @@ fun OnboardingScreen(navController: NavController) {
                     popUpTo("onboarding") { inclusive = true }
                 }
             }) {
-                Text("Skip", color = Color(0xFFFF9800))
+                Text("Skip", color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -231,7 +237,8 @@ fun OnboardingScreen(navController: NavController) {
 fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val SmartFitOrange = Color(0xFFFF9800)
+    val SmartFitOrange = MaterialTheme.colorScheme.primary
+
 
     Box(
         modifier = Modifier
@@ -300,7 +307,7 @@ fun LoginScreen(navController: NavController) {
                     .clip(RoundedCornerShape(25.dp))
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(Color(0xFFFFC107), Color(0xFFFF9800)) // yellow → orange
+                            listOf(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.primary) // yellow → orange
                         )
                     ),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
@@ -319,11 +326,11 @@ fun LoginScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Don’t have an account?")
+                Text(text = "dont have an account?", color = MaterialTheme.colorScheme.secondaryContainer)
                 TextButton(onClick = { navController.navigate("signup") }) {
                     Text(
                         text = "Sign Up",
-                        color = SmartFitOrange,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -334,7 +341,7 @@ fun LoginScreen(navController: NavController) {
 
 @Composable
 fun SignUpScreen(navController: NavController) {
-    val SmartFitOrange = Color(0xFFFF9800)
+    val SmartFitOrange = MaterialTheme.colorScheme.primary
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -342,7 +349,7 @@ fun SignUpScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -400,7 +407,7 @@ fun SignUpScreen(navController: NavController) {
                     .clip(RoundedCornerShape(25.dp))
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(Color(0xFFFFC107), Color(0xFFFF9800))
+                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiaryContainer)
                         )
                     ),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)

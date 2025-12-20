@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -73,24 +75,31 @@ import com.example.smartfit.ui.theme.SmartfitTheme
 import java.util.UUID
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.layout.ContentScale
 
 
-data class ActivityItem(val id: String = UUID.randomUUID().toString(), val name: String, val duration: String, val calories: String)
+
 
 class MainActivity2 : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SmartfitTheme {
-                MainScreen(onLogout = { /* Handled in LoginSignInScreen */ })
+            val systemTheme = isSystemInDarkTheme()
+            var isDarkTheme by remember { mutableStateOf(systemTheme) }
+            SmartfitTheme(darkTheme = isDarkTheme) {
+                MainScreen(
+                    onLogout = { /* Handle logout */ },
+                    onThemeChange = { isDarkTheme = it },
+                    isDarkTheme = isDarkTheme
+                )
             }
         }
     }
 }
 
 @Composable
-fun MainScreen(onLogout: () -> Unit) {
+fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkTheme: Boolean) {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {
@@ -136,7 +145,7 @@ fun MainScreen(onLogout: () -> Unit) {
             composable("home") { HomeScreen(navController) }
             composable("goals") { DailyGoalsScreen(navController) }
             composable("activity_log") { ActivityLogScreen() }
-            composable("profile") { ProfileScreen(navController, onLogout) }
+            composable("profile") { ProfileScreen(navController, onLogout, isDarkTheme, onThemeChange) }
             composable(
                 route = "savedGoals/{steps}/{calories}/{water}",
                 arguments = listOf(
@@ -472,7 +481,9 @@ fun DailyGoalsScreen(navController: NavController) {
                 Image(
                     painter = painterResource(id = R.drawable.quote),
                     contentDescription = "Quote icon",
-                    modifier = Modifier.fillMaxWidth().height(200.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
                 )
             }
         }
@@ -482,10 +493,14 @@ fun DailyGoalsScreen(navController: NavController) {
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth()
             ) {
                 Text(
                     text = "Set Your Daily Goals",
@@ -558,7 +573,9 @@ fun DailyGoalsScreen(navController: NavController) {
                     onClick = {
                         navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
                     },
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                     .copy(contentColor = Color.White)
                 ) {
@@ -606,192 +623,6 @@ fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String)
     }
 }
 
-@Composable
-fun ProfileScreen(navController: NavController, onLogout: () -> Unit) {
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var weight by remember { mutableStateOf("") }
-    var height by remember { mutableStateOf("") }
-
-
-    val bmi by remember {
-        derivedStateOf {
-            val w = weight.toFloatOrNull()
-            val h = height.toFloatOrNull()
-
-            if (w != null && h != null && h > 0f) {
-                val heightM = h / 100f
-                w / (heightM * heightM)
-            } else {
-                null
-            }
-        }
-    }
-
-    val bmiCategory by remember {
-        derivedStateOf {
-            when {
-                bmi == null -> ""
-                bmi!! < 18.5 -> "Underweight"
-                bmi!! < 24.9 -> "Normal"
-                bmi!! < 29.9 -> "Overweight"
-                else -> "Obese"
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        // Profile Image
-        Image(
-            painter = painterResource(id = R.drawable.user1), // YOUR PROFILE PIC
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)   // makes it circular
-                .background(Color.LightGray)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Title
-        Text(
-            text = "Account Settings",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        // Change Password Section
-        Text(
-            text = "Change Password",
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // New Password
-        OutlinedTextField(
-            value = newPassword,
-            onValueChange = { newPassword = it },
-            label = { Text("New Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Confirm Password
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirm Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Save Button
-        Button(
-            onClick = {
-                // TODO: Add password saving logic
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(30.dp)
-        ) {
-            Text("Save Password", color = Color.White, fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // Logout Button
-        Button(
-            onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(30.dp)
-        ) {
-            Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Body Information",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = weight,
-            onValueChange = { weight = it },
-            label = { Text("Weight (kg)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = height,
-            onValueChange = { height = it },
-            label = { Text("Height (cm)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (bmi != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "BMI: ${String.format("%.2f", bmi)}",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = bmiCategory,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-
-
-    }
-}
 
 @Composable
 fun ActivityLogScreen() {
@@ -961,11 +792,189 @@ fun ActivityLogScreen() {
         }
     }
 }
+data class ActivityItem(val id: String = UUID.randomUUID().toString(), val name: String, val duration: String, val calories: String)
 
+@Composable
+fun ProfileScreen(
+    navController: NavController,
+    onLogout: () -> Unit,
+    isDarkTheme: Boolean,
+    onThemeChange: (Boolean) -> Unit
+) {
+    // State variables
+    var weight by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+
+    // BMI Calculation Logic (Hidden calculation, can be used if needed)
+    val bmi by remember {
+        derivedStateOf {
+            val w = weight.toFloatOrNull()
+            val h = height.toFloatOrNull()
+            if (w != null && h != null && h > 0f) w / ((h / 100f) * (h / 100f)) else null
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background) // Adapts to theme
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        // 1. Profile Picture
+        Image(
+            painter = painterResource(id = R.drawable.user1),
+            contentDescription = "Profile Picture",
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 2. Profile Title
+        Text(
+            text = "Profile",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // 3. Body Information Section
+        Text(
+            text = "Body Type",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.align(Alignment.Start)
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Height Input
+        OutlinedTextField(
+            value = height,
+            onValueChange = { height = it },
+            label = { Text("Height (cm)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            // Using default theme colors handles dark/light mode automatically
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Weight Input
+        OutlinedTextField(
+            value = weight,
+            onValueChange = { weight = it },
+            label = { Text("Weight (kg)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 4. Save Button
+        Button(
+            onClick = { /* TODO: Save logic here */ },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(30.dp)
+        ) {
+            Text("Save", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // 5. Dark / Light Mode Toggle (Custom Row)
+        Text(
+            text = "Theme",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(50.dp))
+                .clip(RoundedCornerShape(50.dp))
+        ) {
+            // Dark Mode Button side
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    // If Dark mode is ON, background is Orange, otherwise Transparent
+                    .background(if (isDarkTheme) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onThemeChange(true) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Dark",
+                    fontWeight = FontWeight.Bold,
+                    // If selected, text is White. If not, text is Orange.
+                    color = if (isDarkTheme) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Light Mode Button side
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    // If Dark mode is OFF, background is Orange, otherwise Transparent
+                    .background(if (!isDarkTheme) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onThemeChange(false) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Light",
+                    fontWeight = FontWeight.Bold,
+                    color = if (!isDarkTheme) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // 6. Reset Password Button
+        Button(
+            onClick = { /* TODO: Navigate to reset password screen */ },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(30.dp)
+        ) {
+            Text("Reset Password", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Logout Text/Button
+        Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer), modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+            shape = RoundedCornerShape(30.dp)) {
+            Text("Log Out", color = Color.White, fontSize = 16.sp)
+        }
+    }
+}
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
     SmartfitTheme {
-        MainScreen(onLogout = {})
+        MainScreen(onLogout = {}, onThemeChange = {}, isDarkTheme = false)
     }
 }
