@@ -142,7 +142,13 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
             navController, startDestination = "home",
             Modifier.padding(innerPadding)
         ) {
-            composable("home") { HomeScreen(navController) }
+            composable("home") {HomeScreen(navController = navController, bmiCategory = "") }
+            composable("home/{bmiCategory}") { backStackEntry ->
+                HomeScreen(
+                    navController = navController,
+                    bmiCategory = backStackEntry.arguments?.getString("bmiCategory") ?: ""
+                )
+            }
             composable("goals") { DailyGoalsScreen(navController) }
             composable("activity_log") { ActivityLogScreen() }
             composable("profile") { ProfileScreen(navController, onLogout, isDarkTheme, onThemeChange) }
@@ -164,12 +170,8 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
 }
 
 @Composable
-fun HomeScreen(navController: NavController) {
-    var weight by remember { mutableStateOf(TextFieldValue("")) }
-    var height by remember { mutableStateOf(TextFieldValue("")) }
-    var bmiResult by remember { mutableStateOf("") }
+fun HomeScreen(navController: NavController, bmiCategory: String) {
     val scrollState = rememberScrollState()
-    var bmiCategory by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -228,7 +230,6 @@ fun HomeScreen(navController: NavController) {
                 }
             }
 
-
             Image(
                 painter = painterResource(id = R.drawable.user1), // add image to drawable
                 contentDescription = "Profile",
@@ -272,113 +273,21 @@ fun HomeScreen(navController: NavController) {
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(34.dp))
 
-        // BMI Calculator Card
         Card(
-            shape = RoundedCornerShape(30.dp),
-            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
+            shape = RoundedCornerShape(20.dp),
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary), //light orange
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    "Bmi Calculator",
+                    "Summary",
+                    fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
                     color = Color.White
                 )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text("Weight (kg)", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = weight,
-                    onValueChange = { weight = it },
-                    label = { Text(text = "Enter your weight in kg") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text("Height (cm)", fontWeight = FontWeight.Bold, color = Color.White)
-                OutlinedTextField(
-                    value = height,
-                    onValueChange = { height = it },
-                    label = { Text(text = "Enter your height in centimeters") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                    )
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Button(
-                        onClick = {
-                            val weightF = weight.text.toFloatOrNull() ?: 0f
-                            val heightF = height.text.toFloatOrNull() ?: 0f
-
-                            if (weightF > 0 && heightF > 0) {
-                                val heightM = heightF / 100f   // convert cm → meters
-                                val bmi = weightF / (heightM * heightM)
-                                bmiResult = String.format("%.2f", bmi)
-
-                                bmiCategory = when {
-                                    bmi < 18.5 -> "Underweight"
-                                    bmi < 24.9 -> "Normal"
-                                    bmi < 29.9 -> "Overweight"
-                                    else -> "Obese"
-                                }
-                            }
-
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                        modifier = Modifier
-                            .height(45.dp)
-                            .width(120.dp)
-                    ) {
-                        Text("Calculate", color = Color.White)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column {
-                        Text(
-                            "BMI: $bmiResult",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            "You are: $bmiCategory",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 
@@ -420,6 +329,37 @@ fun HomeScreen(navController: NavController) {
                         text = tab,
                         fontWeight = FontWeight.Bold,
                         color = if (selectedTab == tab) Color.White else MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+        if (selectedTab == "Suggestions") {
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = if (bmiCategory.isNotEmpty())
+                    "BMI Status: $bmiCategory"
+                else
+                    "Please enter your body data",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            getSuggestions(bmiCategory).forEach { suggestion ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = suggestion,
+                        modifier = Modifier.padding(16.dp),
+                        fontSize = 16.sp
                     )
                 }
             }
@@ -622,7 +562,6 @@ fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String)
         }
     }
 }
-
 
 @Composable
 fun ActivityLogScreen() {
@@ -881,15 +820,18 @@ fun ProfileScreen(
 
         // 4. Save Button
         Button(
-            onClick = { /* TODO: Save logic here */ },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            onClick = {
+                val category = getBmiCategory(weight, height)
+                navController.navigate("home/$category")
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(30.dp)
         ) {
-            Text("Save", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+            Text("Save", fontWeight = FontWeight.Bold)
         }
+
 
         Spacer(modifier = Modifier.height(30.dp))
 
@@ -971,6 +913,62 @@ fun ProfileScreen(
         }
     }
 }
+
+fun getBmiCategory(weight: String, height: String): String {
+    val w = weight.toFloatOrNull()
+    val h = height.toFloatOrNull()
+
+    if (w == null || h == null || h <= 0f) return ""
+
+    val bmi = w / ((h / 100f) * (h / 100f))
+
+    return when {
+        bmi < 18.5f -> "Underweight"
+        bmi < 25f -> "Normal"
+        bmi < 30f -> "Overweight"
+        else -> "Obese"
+    }
+}
+
+fun getSuggestions(bmiCategory: String): List<String> {
+    return when (bmiCategory) {
+
+        "Underweight" -> listOf(
+            "Light strength training",
+            "Increase calorie intake",
+            "Yoga or stretching",
+            "Short daily walks",
+            "Protein-focused meals"
+        )
+
+        "Normal" -> listOf(
+            "Balanced strength workout",
+            "30 min cardio sessions",
+            "Morning stretches",
+            "Consistent sleep routine",
+            "Active daily lifestyle"
+        )
+
+        "Overweight" -> listOf(
+            "Low-impact cardio",
+            "Daily step goals",
+            "Reduce sugar intake",
+            "Bodyweight workouts",
+            "Stretch after exercise"
+        )
+
+        "Obese" -> listOf(
+            "Short frequent walks",
+            "Chair or low-impact cardio",
+            "Beginner home workouts",
+            "Focus on consistency",
+            "Healthy portion control"
+        )
+
+        else -> emptyList()
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
