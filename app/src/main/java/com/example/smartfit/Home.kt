@@ -171,6 +171,12 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
 
 @Composable
 fun HomeScreen(navController: NavController, bmiCategory: String) {
+
+    val bmiCategoryFromProfile =
+        navController.currentBackStackEntry
+            ?.savedStateHandle
+            ?.get<String>("bmiCategory") ?: bmiCategory
+
     val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -338,8 +344,8 @@ fun HomeScreen(navController: NavController, bmiCategory: String) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = if (bmiCategory.isNotEmpty())
-                    "BMI Status: $bmiCategory"
+                text = if (bmiCategoryFromProfile.isNotEmpty())
+                    "BMI Status: $bmiCategoryFromProfile"
                 else
                     "Please enter your body data",
                 fontSize = 18.sp,
@@ -347,9 +353,7 @@ fun HomeScreen(navController: NavController, bmiCategory: String) {
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            getSuggestions(bmiCategory).forEach { suggestion ->
+            getSuggestions(bmiCategoryFromProfile).forEach { suggestion ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -364,9 +368,10 @@ fun HomeScreen(navController: NavController, bmiCategory: String) {
                 }
             }
         }
-
     }
+
 }
+
 
 @Composable
 fun DailyGoalsScreen(navController: NavController) {
@@ -822,7 +827,11 @@ fun ProfileScreen(
         Button(
             onClick = {
                 val category = getBmiCategory(weight, height)
-                navController.navigate("home/$category")
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("bmiCategory", category)
+
+                navController.popBackStack()
             },
             modifier = Modifier
                 .fillMaxWidth()
