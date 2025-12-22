@@ -101,6 +101,7 @@ class MainActivity2 : ComponentActivity() {
 @Composable
 fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkTheme: Boolean) {
     val navController = rememberNavController()
+    val activities = remember { mutableStateOf(listOf<ActivityItem>()) }
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -142,15 +143,28 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
             navController, startDestination = "home",
             Modifier.padding(innerPadding)
         ) {
-            composable("home") {HomeScreen(navController = navController, bmiCategory = "") }
+            composable("home") {
+                HomeScreen(
+                    navController = navController,
+                    bmiCategory = "",
+                    activities = activities.value
+                )
+            }
             composable("home/{bmiCategory}") { backStackEntry ->
                 HomeScreen(
                     navController = navController,
-                    bmiCategory = backStackEntry.arguments?.getString("bmiCategory") ?: ""
+                    bmiCategory = backStackEntry.arguments?.getString("bmiCategory") ?: "",
+                    activities = activities.value
                 )
             }
             composable("goals") { DailyGoalsScreen(navController) }
-            composable("activity_log") { ActivityLogScreen() }
+            composable("activity_log") {
+                ActivityLogScreen(
+                    activities = activities.value,
+                    onActivitiesChange = { activities.value = it }
+                )
+            }
+
             composable("profile") { ProfileScreen(navController, onLogout, isDarkTheme, onThemeChange) }
             composable(
                 route = "savedGoals/{steps}/{calories}/{water}",
@@ -170,7 +184,9 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
 }
 
 @Composable
-fun HomeScreen(navController: NavController, bmiCategory: String) {
+fun HomeScreen(navController: NavController,
+               bmiCategory: String,
+               activities: List<ActivityItem>) {
 
     val bmiCategoryFromProfile =
         navController.currentBackStackEntry
@@ -339,9 +355,45 @@ fun HomeScreen(navController: NavController, bmiCategory: String) {
                 }
             }
         }
-        if (selectedTab == "Suggestions") {
+        Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
+        if (selectedTab == "Activity") {
+            if (activities.isEmpty()) {
+                Text(
+                    text = "No activities yet",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                activities.takeLast(3).reversed().forEach { activity ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                activity.name,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                            Text(
+                                "${activity.duration} min • ${activity.calories} cal",
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        if (selectedTab == "Suggestions") {
 
             Text(
                 text = if (bmiCategoryFromProfile.isNotEmpty())
@@ -522,7 +574,7 @@ fun DailyGoalsScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-                    .copy(contentColor = Color.White)
+                        .copy(contentColor = Color.White)
                 ) {
                     Text("Save Goals", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -569,11 +621,11 @@ fun SavedGoalsScreen(stepsGoal: String, caloriesGoal: String, waterGoal: String)
 }
 
 @Composable
-fun ActivityLogScreen() {
+fun ActivityLogScreen(activities: List<ActivityItem>,
+                      onActivitiesChange: (List<ActivityItem>) -> Unit) {
     var activityName by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var calories by remember { mutableStateOf("") }
-    var activities by remember { mutableStateOf(listOf<ActivityItem>()) }
     var editingActivity by remember { mutableStateOf<ActivityItem?>(null) }
 
     Image(
@@ -651,11 +703,24 @@ fun ActivityLogScreen() {
                     Button(
                         onClick = {
                             if (editingActivity == null) { // ADD
-                                val newActivity = ActivityItem(name = activityName, duration = duration, calories = calories)
-                                activities = activities + newActivity
+                                val newActivity = ActivityItem(
+                                    name = activityName,
+                                    duration = duration,
+                                    calories = calories
+                                )
+                                onActivitiesChange(activities + newActivity)
                             } else { // UPDATE
-                                val updatedActivity = editingActivity!!.copy(name = activityName, duration = duration, calories = calories)
-                                activities = activities.map { if (it.id == editingActivity!!.id) updatedActivity else it }
+                                val updatedActivity = editingActivity!!.copy(
+                                    name = activityName,
+                                    duration = duration,
+                                    calories = calories
+                                )
+
+                                onActivitiesChange(
+                                    activities.map {
+                                        if (it.id == editingActivity!!.id) updatedActivity else it
+                                    }
+                                )
                             }
                             // Reset fields
                             activityName = ""
@@ -717,15 +782,15 @@ fun ActivityLogScreen() {
                                 duration = activity.duration
                                 calories = activity.calories
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                             ) {
                                 Text("Edit", color = Color.White)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(onClick = { // DELETE
-                                activities = activities - activity
+                                onActivitiesChange(activities - activity)
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor =  MaterialTheme.colorScheme.error) // Red for delete
+                                colors = ButtonDefaults.buttonColors(containerColor =  MaterialTheme.colorScheme.error) // Red for delete
                             ) {
                                 Text("Delete", color = Color.White)
                             }
