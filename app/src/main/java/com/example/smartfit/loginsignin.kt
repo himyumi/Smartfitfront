@@ -50,6 +50,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smartfit.ui.theme.SmartfitTheme
 import kotlinx.coroutines.delay
+import android.util.Log
 
 class LoginSignInScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,6 +105,7 @@ fun SplashScreen(navController: NavController) {
             animationSpec = tween(durationMillis = 1500)
         )
         delay(3000L)
+        Log.d("SplashScreen", "Navigating from splash to onboarding")
         navController.navigate("onboarding") {
             popUpTo("splash") { inclusive = true }
         }
@@ -196,6 +198,7 @@ fun OnboardingScreen(navController: NavController) {
                     if (page < pages.lastIndex) {
                         page++
                     } else {
+                        Log.d("OnboardingScreen", "Completed onboarding, navigating to login")
                         navController.navigate("login") {
                             popUpTo("onboarding") { inclusive = true }
                         }
@@ -223,6 +226,7 @@ fun OnboardingScreen(navController: NavController) {
 
             // Skip button
             TextButton(onClick = {
+                Log.d("OnboardingScreen", "Skip pressed, navigating to login")
                 navController.navigate("login") {
                     popUpTo("onboarding") { inclusive = true }
                 }
@@ -298,9 +302,12 @@ fun LoginScreen(navController: NavController) {
 
             // Login Button
             Button(
-                onClick = { navController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
-                } },
+                onClick = {
+                    Log.d("LoginScreen", "Login clicked: email=$email")
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .height(50.dp)
@@ -327,7 +334,9 @@ fun LoginScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "dont have an account?", color = MaterialTheme.colorScheme.secondaryContainer)
-                TextButton(onClick = { navController.navigate("signup") }) {
+                TextButton(onClick = {
+                    Log.d("LoginScreen", "Navigate to SignUp screen")
+                    navController.navigate("signup") }) {
                     Text(
                         text = "Sign Up",
                         color = MaterialTheme.colorScheme.primary,
@@ -397,6 +406,7 @@ fun SignUpScreen(navController: NavController) {
             Button(
                 onClick = {
                     // Later, we’ll save this using DataStore
+                    Log.d("SignUpScreen", "SignUp clicked: name=$name, email=$email")
                     navController.navigate("login") {
                         popUpTo("signup") { inclusive = true }
                     }

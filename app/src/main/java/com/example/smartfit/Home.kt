@@ -1,5 +1,6 @@
 package com.example.smartfit
 
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -77,7 +78,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.layout.ContentScale
-
+import android.util.Log
 
 
 
@@ -299,7 +300,7 @@ fun HomeScreen(navController: NavController,
 
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary), //light orange
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
@@ -310,6 +311,8 @@ fun HomeScreen(navController: NavController,
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+
+                SummaryTab(activities = activities)
             }
         }
 
@@ -569,6 +572,7 @@ fun DailyGoalsScreen(navController: NavController) {
                 Button(
                     onClick = {
                         navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
+                        Log.d("DailyGoalsScreen", "Goals saved: Steps=$stepsGoal, Calories=$caloriesGoal, Water=$waterGoal")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -709,6 +713,7 @@ fun ActivityLogScreen(activities: List<ActivityItem>,
                                     calories = calories
                                 )
                                 onActivitiesChange(activities + newActivity)
+                                Log.d("ActivityLogScreen", "Activity added: $newActivity")
                             } else { // UPDATE
                                 val updatedActivity = editingActivity!!.copy(
                                     name = activityName,
@@ -721,6 +726,7 @@ fun ActivityLogScreen(activities: List<ActivityItem>,
                                         if (it.id == editingActivity!!.id) updatedActivity else it
                                     }
                                 )
+                                Log.d("ActivityLogScreen", "Activity updated: $updatedActivity")
                             }
                             // Reset fields
                             activityName = ""
@@ -781,6 +787,7 @@ fun ActivityLogScreen(activities: List<ActivityItem>,
                                 activityName = activity.name
                                 duration = activity.duration
                                 calories = activity.calories
+                                Log.d("ActivityLogScreen", "Edit clicked for activity: $activity")
                             },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                             ) {
@@ -789,6 +796,7 @@ fun ActivityLogScreen(activities: List<ActivityItem>,
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(onClick = { // DELETE
                                 onActivitiesChange(activities - activity)
+                                Log.d("ActivityLogScreen", "Activity deleted: $activity")
                             },
                                 colors = ButtonDefaults.buttonColors(containerColor =  MaterialTheme.colorScheme.error) // Red for delete
                             ) {
@@ -897,6 +905,7 @@ fun ProfileScreen(
                     ?.set("bmiCategory", category)
 
                 navController.popBackStack()
+                Log.d("ProfileScreen", "BMI Category saved: $category")
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -964,17 +973,7 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // 6. Reset Password Button
-        Button(
-            onClick = { /* TODO: Navigate to reset password screen */ },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(30.dp)
-        ) {
-            Text("Reset Password", color = Color.White, fontWeight = FontWeight.Bold)
-        }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -1040,6 +1039,36 @@ fun getSuggestions(bmiCategory: String): List<String> {
         )
 
         else -> emptyList()
+    }
+}
+
+@Composable
+fun SummaryTab(activities: List<ActivityItem>, modifier: Modifier = Modifier) {
+    val activitiesCount = activities.size
+    val totalMinutes = activities.mapNotNull { it.duration.toIntOrNull() }.sum()
+    val totalCalories = activities.mapNotNull { it.calories.toIntOrNull() }.sum()
+
+    val labelStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+    val valueStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp)
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        SummaryRow("Activities", "$activitiesCount", labelStyle, valueStyle)
+        Spacer(modifier = Modifier.height(8.dp))
+        SummaryRow("Total Duration", "$totalMinutes min", labelStyle, valueStyle)
+        Spacer(modifier = Modifier.height(8.dp))
+        SummaryRow("Calories Burned", "$totalCalories cal", labelStyle, valueStyle)
+    }
+}
+
+// kotlin
+@Composable
+private fun SummaryRow(label: String, value: String, labelStyle: androidx.compose.ui.text.TextStyle, valueStyle: androidx.compose.ui.text.TextStyle) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text = "•", style = labelStyle, color = Color.White)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = "$label: ", style = labelStyle, color = Color.White)
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = value, style = valueStyle, color = Color.White)
     }
 }
 
