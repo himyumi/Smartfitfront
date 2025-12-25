@@ -51,6 +51,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.smartfit.ui.theme.SmartfitTheme
 import kotlinx.coroutines.delay
 import android.util.Log
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.example.smartfit.ui.RawVideoPlayerById
 
 class LoginSignInScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -242,6 +245,8 @@ fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val SmartFitOrange = MaterialTheme.colorScheme.primary
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
 
 
     Box(
@@ -304,8 +309,15 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     Log.d("LoginScreen", "Login clicked: email=$email")
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    // show the video overlay for feedback then navigate
+                    scope.launch {
+                        isLoading = true
+                        // let the animation play for ~1.5 seconds (adjust as needed)
+                        kotlinx.coroutines.delay(1500)
+                        isLoading = false
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 modifier = Modifier
@@ -345,6 +357,15 @@ fun LoginScreen(navController: NavController) {
                 }
             }
         }
+
+        // Video overlay -- using R.raw.login_anim (moved file)
+        RawVideoPlayerById(resId = R.raw.login_anim, visible = isLoading, loop = false, onFinished = {
+            // when video finishes, dismiss overlay and navigate
+            isLoading = false
+            navController.navigate("home") {
+                popUpTo("login") { inclusive = true }
+            }
+        })
     }
 }
 

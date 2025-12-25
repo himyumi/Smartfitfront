@@ -195,6 +195,7 @@ fun HomeScreen(navController: NavController,
             ?.get<String>("bmiCategory") ?: bmiCategory
 
     val scrollState = rememberScrollState()
+    var steps by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -268,31 +269,42 @@ fun HomeScreen(navController: NavController,
         // Steps Tracker Card
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary), //light orange
+            colors = cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
+
                 Text(
                     "Steps Tracker",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.surface,
-                                    MaterialTheme.colorScheme.surface
-                                )
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                ) {}
+
+                Text(
+                    text = "$steps steps",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+
+                    Button(onClick = { if (steps > 0) steps-- }) {
+                        Text("-")
+                    }
+
+                    Button(onClick = { steps++ }) {
+                        Text("+")
+                    }
+                }
             }
         }
 
