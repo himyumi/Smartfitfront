@@ -420,20 +420,38 @@ fun HomeScreen(navController: NavController,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            getSuggestions(bmiCategoryFromProfile).forEach { suggestion ->
+            getSuggestionDetails(bmiCategoryFromProfile).forEach { suggestion ->
+                var expanded by remember { mutableStateOf(false) }
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = 6.dp)
+                        .clickable { expanded = !expanded },
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = suggestion,
-                        modifier = Modifier.padding(16.dp),
-                        fontSize = 16.sp
-                    )
+                    Column(modifier = Modifier.padding(16.dp)) {
+
+                        Text(
+                            text = suggestion.title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            // CHANGE FROM BLACK TO PRIMARY HERE:
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (expanded) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = suggestion.description,
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                 }
             }
+
         }
     }
 
@@ -1015,39 +1033,54 @@ fun getBmiCategory(weight: String, height: String): String {
     }
 }
 
-fun getSuggestions(bmiCategory: String): List<String> {
+
+data class Suggestion(val title: String, val description: String)
+
+fun getSuggestionDetails(bmiCategory: String): List<Suggestion> {
     return when (bmiCategory) {
 
         "Underweight" -> listOf(
-            "Light strength training",
-            "Increase calorie intake",
-            "Yoga or stretching",
-            "Short daily walks",
-            "Protein-focused meals"
+            Suggestion(
+                "Increase calorie intake",
+                "Add healthy snacks like nuts, smoothies, and yogurt between meals."
+            ),
+            Suggestion(
+                "Light strength training",
+                "Focus on full-body workouts 2–3 times per week to build muscle safely."
+            )
         )
 
         "Normal" -> listOf(
-            "Balanced strength workout",
-            "30 min cardio sessions",
-            "Morning stretches",
-            "Consistent sleep routine",
-            "Active daily lifestyle"
+            Suggestion(
+                "Stay consistent",
+                "30 minutes of moderate exercise most days keeps metabolism balanced."
+            ),
+            Suggestion(
+                "Balanced strength workout",
+                "Alternate upper-body, lower-body, and core exercises each session."
+            )
         )
 
         "Overweight" -> listOf(
-            "Low-impact cardio",
-            "Daily step goals",
-            "Reduce sugar intake",
-            "Bodyweight workouts",
-            "Stretch after exercise"
+            Suggestion(
+                "Low-impact cardio",
+                "Walking, cycling, or swimming burns fat while protecting joints."
+            ),
+            Suggestion(
+                "Reduce sugar intake",
+                "Replace soda and sweets with water, fruit, or unsweetened drinks."
+            )
         )
 
         "Obese" -> listOf(
-            "Short frequent walks",
-            "Chair or low-impact cardio",
-            "Beginner home workouts",
-            "Focus on consistency",
-            "Healthy portion control"
+            Suggestion(
+                "Short frequent walks",
+                "Start with 10 minutes twice a day, then increase slowly."
+            ),
+            Suggestion(
+                "Healthy portion control",
+                "Use smaller plates and fill half your plate with vegetables."
+            )
         )
 
         else -> emptyList()
