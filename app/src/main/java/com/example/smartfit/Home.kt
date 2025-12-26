@@ -103,6 +103,9 @@ class MainActivity2 : ComponentActivity() {
 fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkTheme: Boolean) {
     val navController = rememberNavController()
     val activities = remember { mutableStateOf(listOf<ActivityItem>()) }
+    var stepsGoal by remember { mutableStateOf(0) }
+    var caloriesGoal by remember { mutableStateOf(0) }
+    var waterGoal by remember { mutableStateOf(0) }
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -148,17 +151,28 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                 HomeScreen(
                     navController = navController,
                     bmiCategory = "",
-                    activities = activities.value
+                    activities = activities.value,
+                    stepsGoal = stepsGoal
                 )
             }
             composable("home/{bmiCategory}") { backStackEntry ->
                 HomeScreen(
                     navController = navController,
                     bmiCategory = backStackEntry.arguments?.getString("bmiCategory") ?: "",
-                    activities = activities.value
+                    activities = activities.value,
+                    stepsGoal = stepsGoal
                 )
             }
-            composable("goals") { DailyGoalsScreen(navController) }
+            composable("goals") {
+                DailyGoalsScreen(
+                    navController = navController,
+                    onSaveGoals = { steps, calories, water ->
+                        stepsGoal = steps
+                        caloriesGoal = calories
+                        waterGoal = water
+                    }
+                )
+            }
             composable("activity_log") {
                 ActivityLogScreen(
                     activities = activities.value,
@@ -185,9 +199,12 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
 }
 
 @Composable
-fun HomeScreen(navController: NavController,
-               bmiCategory: String,
-               activities: List<ActivityItem>) {
+fun HomeScreen(
+    navController: NavController,
+    bmiCategory: String,
+    activities: List<ActivityItem>,
+    stepsGoal: Int
+) {
 
     val bmiCategoryFromProfile =
         navController.currentBackStackEntry
@@ -291,6 +308,22 @@ fun HomeScreen(navController: NavController,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
+
+                if (stepsGoal > 0) {
+                    Text(
+                        text = "Goal: $steps / $stepsGoal",
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
+
+                if (steps >= stepsGoal && stepsGoal > 0) {
+                    Text(
+                        text = "Goal achieved! 🎉",
+                        fontSize = 16.sp,
+                        color = Color.Green
+                    )
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -459,7 +492,10 @@ fun HomeScreen(navController: NavController,
 
 
 @Composable
-fun DailyGoalsScreen(navController: NavController) {
+fun DailyGoalsScreen(
+    navController: NavController,
+    onSaveGoals: (Int, Int, Int) -> Unit
+) {
     var stepsGoal by remember { mutableStateOf("") }
     var caloriesGoal by remember { mutableStateOf("") }
     var waterGoal by remember { mutableStateOf("") }
@@ -601,8 +637,13 @@ fun DailyGoalsScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
+                        onSaveGoals(
+                            stepsGoal.toIntOrNull() ?: 0,
+                            caloriesGoal.toIntOrNull() ?: 0,
+                            waterGoal.toIntOrNull() ?: 0
+                        )
+
                         navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
-                        Log.d("DailyGoalsScreen", "Goals saved: Steps=$stepsGoal, Calories=$caloriesGoal, Water=$waterGoal")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
