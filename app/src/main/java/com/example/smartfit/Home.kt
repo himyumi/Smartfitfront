@@ -78,8 +78,17 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.*
 import android.util.Log
-
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.*
+// ^ Ensure icons are imported
 
 
 class MainActivity2 : ComponentActivity() {
@@ -150,7 +159,7 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
             composable("home") {
                 HomeScreen(
                     navController = navController,
-                    bmiCategory = "",
+                    bmiCategoryFromProfile = "",
                     activities = activities.value,
                     stepsGoal = stepsGoal
                 )
@@ -158,7 +167,7 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
             composable("home/{bmiCategory}") { backStackEntry ->
                 HomeScreen(
                     navController = navController,
-                    bmiCategory = backStackEntry.arguments?.getString("bmiCategory") ?: "",
+                    bmiCategoryFromProfile = backStackEntry.arguments?.getString("bmiCategory") ?: "",
                     activities = activities.value,
                     stepsGoal = stepsGoal
                 )
@@ -201,15 +210,22 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
 @Composable
 fun HomeScreen(
     navController: NavController,
-    bmiCategory: String,
+    bmiCategoryFromProfile: String,
     activities: List<ActivityItem>,
-    stepsGoal: Int
+    stepsGoal: Int,
+    viewModel: SuggestionViewModel = viewModel()
 ) {
+
+    LaunchedEffect(bmiCategoryFromProfile) {
+        if (bmiCategoryFromProfile.isNotEmpty()) {
+            viewModel.fetchSuggestions(bmiCategoryFromProfile)
+        }
+    }
 
     val bmiCategoryFromProfile =
         navController.currentBackStackEntry
             ?.savedStateHandle
-            ?.get<String>("bmiCategory") ?: bmiCategory
+            ?.get<String>("bmiCategory") ?: bmiCategoryFromProfile
 
     val scrollState = rememberScrollState()
     var steps by remember { mutableStateOf(0) }
@@ -443,49 +459,81 @@ fun HomeScreen(
 
         if (selectedTab == "Suggestions") {
 
-            Text(
-                text = if (bmiCategoryFromProfile.isNotEmpty())
-                    "BMI Status: $bmiCategoryFromProfile"
-                else
-                    "Please enter your body data",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            getSuggestionDetails(bmiCategoryFromProfile).forEach { suggestion ->
-                var expanded by remember { mutableStateOf(false) }
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .clickable { expanded = !expanded },
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-
-                        Text(
-                            text = suggestion.title,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            // CHANGE FROM BLACK TO PRIMARY HERE:
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        if (expanded) {
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = suggestion.description,
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
+            // 1. Trigger API call when entering this tab
+            // We use 'Unit' key to force it to check every time the tab is opened
+            LaunchedEffect(Unit) {
+                if (bmiCategoryFromProfile.isNotEmpty()) {
+                    viewModel.fetchSuggestions(bmiCategoryFromProfile)
                 }
             }
 
+            // 2. DEBUG TEXT: This will tell you if the data arrived
+            Text(
+                text = if (bmiCategoryFromProfile.isEmpty()) "Status: No BMI Data" else "Status: $bmiCategoryFromProfile",
+                color = if (bmiCategoryFromProfile.isEmpty()) Color.Red else Color.Green,
+                fontSize = 12.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 3. Handle Loading/Error/Success
+            if (viewModel.isLoading) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            else if (viewModel.errorMessage != null) {
+                Text(text = "Error: ${viewModel.errorMessage}", color = Color.Red)
+                Button(onClick = { viewModel.fetchSuggestions(bmiCategoryFromProfile) }) { Text("Retry") }
+            }
+            else if (viewModel.suggestions.isNotEmpty()) {
+                // Display the list
+                viewModel.suggestions.forEach { suggestion ->
+                    var expanded by remember { mutableStateOf(false) }
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                            .clickable { expanded = !expanded },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier
+                            .padding(16.dp)
+                            .animateContentSize()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = getIconByName(suggestion.icon ?: ""),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = suggestion.title,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            if (expanded) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = suggestion.description)
+                            }
+                        }
+                    }
+                }
+            } else {
+                // If category exists but list is empty (API loading issue)
+                if (bmiCategoryFromProfile.isNotEmpty()) {
+                    Text("Loading suggestions...", color = Color.Gray)
+                } else {
+                    Text("Go to Profile -> Enter Height/Weight -> Click Save.", color = Color.Gray)
+                }
+            }
         }
+
     }
 
 }
@@ -655,6 +703,7 @@ fun DailyGoalsScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
@@ -1163,5 +1212,23 @@ private fun SummaryRow(label: String, value: String, labelStyle: androidx.compos
 fun MainScreenPreview() {
     SmartfitTheme {
         MainScreen(onLogout = {}, onThemeChange = {}, isDarkTheme = false)
+    }
+}
+
+fun getIconByName(iconName: String?): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (iconName) {
+        "Restaurant" -> androidx.compose.material.icons.Icons.Filled.Restaurant
+        "FitnessCenter" -> androidx.compose.material.icons.Icons.Filled.FitnessCenter
+        "Egg" -> androidx.compose.material.icons.Icons.Filled.Egg
+        "Balance" -> androidx.compose.material.icons.Icons.Filled.Balance
+        "WaterDrop" -> androidx.compose.material.icons.Icons.Filled.WaterDrop
+        "Bedtime" -> androidx.compose.material.icons.Icons.Filled.Bedtime
+        "TrendingDown" -> androidx.compose.material.icons.Icons.Filled.TrendingDown
+        "DirectionsRun" -> androidx.compose.material.icons.Icons.Filled.DirectionsRun
+        "NoFood" -> androidx.compose.material.icons.Icons.Filled.NoFood
+        "MedicalServices" -> androidx.compose.material.icons.Icons.Filled.MedicalServices
+        "Pool" -> androidx.compose.material.icons.Icons.Filled.Pool
+        "MenuBook" -> androidx.compose.material.icons.Icons.Filled.MenuBook
+        else -> androidx.compose.material.icons.Icons.Filled.Info
     }
 }

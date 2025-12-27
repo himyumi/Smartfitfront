@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.smartfit"> <!-- FIX 1: Added package name here -->
+
+    <!-- Internet Permission (Correctly placed) -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -11,6 +15,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Smartfit">
+
+        <!-- Entry Point (Login Screen) -->
         <activity
             android:name=".LoginSignInScreen"
             android:exported="true"
@@ -18,25 +24,34 @@
             android:theme="@style/Theme.Smartfit">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- MainActivity3 -->
         <activity
             android:name=".MainActivity3"
             android:exported="false"
             android:label="@string/title_activity_main3"
-            android.theme="@style/Theme.Smartfit" />
+            android:theme="@style/Theme.Smartfit" /> <!-- FIX 2: Fixed typo (changed . to :) -->
+
+        <!-- MainActivity2 (Home) -->
         <activity
             android:name=".MainActivity2"
             android:exported="false"
             android:label="@string/title_activity_main2"
             android:theme="@style/Theme.Smartfit" />
+
+        <!-- Original MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.Smartfit" />
+
+        <!-- Note: If you have a ResetPasswordActivity file, add it here too -->
+        <!-- <activity android:name=".ResetPasswordActivity" /> -->
+
     </application>
 
 </manifest>
