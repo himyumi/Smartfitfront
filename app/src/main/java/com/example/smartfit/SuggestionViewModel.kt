@@ -29,10 +29,10 @@ class SuggestionViewModel : ViewModel() {
                 // 2. Map "Normal" -> "Normal weight" to match JSON keys
                 val key = when {
                     bmiCategory.contains("Underweight", true) -> "Underweight"
-                    bmiCategory.contains("Normal", true) -> "Normal weight" // Fixed mapping to match Gist
+                    bmiCategory.contains("Normal", true) -> "Normal"
                     bmiCategory.contains("Overweight", true) -> "Overweight"
                     bmiCategory.contains("Obese", true) -> "Obese"
-                    else -> "Normal weight"
+                    else -> "Normal"
                 }
 
                 suggestions = response[key] ?: emptyList()
