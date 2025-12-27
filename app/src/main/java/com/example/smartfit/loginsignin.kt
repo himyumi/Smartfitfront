@@ -52,433 +52,489 @@ import com.example.smartfit.ui.theme.SmartfitTheme
 import kotlinx.coroutines.delay
 import android.util.Log
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import com.example.smartfit.ui.RawVideoPlayerById
+import android.widget.Toast
+
 
 class LoginSignInScreen : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val systemTheme = isSystemInDarkTheme()
             var isDarkTheme by remember { mutableStateOf(systemTheme) }
+
             SmartfitTheme(darkTheme = isDarkTheme) {
-                Navigation(isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it })
-            }
-        }
-    }
-}
-
-@Composable
-fun Navigation(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "splash") {
-        composable("splash") {
-            SplashScreen(navController = navController)
-        }
-        composable("onboarding") {
-            OnboardingScreen(navController = navController)
-        }
-        composable("login") {
-            LoginScreen(navController = navController)
-        }
-        composable("signup") {
-            SignUpScreen(navController = navController)
-        }
-        composable("home") {
-            MainScreen(
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                },
-                isDarkTheme = isDarkTheme,
-                onThemeChange = onThemeChange
-            )
-        }
-    }
-}
-
-@Composable
-fun SplashScreen(navController: NavController) {
-    val alpha = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        alpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 1500)
-        )
-        delay(3000L)
-        Log.d("SplashScreen", "Navigating from splash to onboarding")
-        navController.navigate("onboarding") {
-            popUpTo("splash") { inclusive = true }
-        }
-    }
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.smartfitlogo),
-            contentDescription = "SmartFit Logo",
-            modifier = Modifier
-                .fillMaxSize(0.6f)
-                .alpha(alpha.value)
-        )
-    }
-}
-
-data class OnboardingPage(val imageRes: Int, val title: String, val description: String)
-
-@Composable
-fun OnboardingScreen(navController: NavController) {
-    // Data for each onboarding page
-    val pages = listOf(
-        OnboardingPage(R.drawable.onboarding1, "Track Your Workout", "Log your daily exercises easily and stay consistent."),
-        OnboardingPage(R.drawable.onboarding2, "Monitor Your Progress", "Visualize your performance over time with clear stats."),
-        OnboardingPage(R.drawable.onboarding3, "Get Health Tips", "Receive daily advice to keep your body in top shape.")
-    )
-
-    var page by remember { mutableStateOf(0) }
-
-    // Layout
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        // Background Image
-        Image(
-            painter = painterResource(id = pages[page].imageRes),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Overlay for text + buttons
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.6f))
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = pages[page].title,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = pages[page].description,
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Dots indicator
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                repeat(pages.size) { index ->
-                    val color =
-                        if (index == page) MaterialTheme.colorScheme.primary else Color.LightGray
-                    Box(
-                        modifier = Modifier
-                            .padding(5.dp)
-                            .size(8.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(color)
-                    )
-                }
-            }
-
-            // Next / Get Started button
-            Button(
-                onClick = {
-                    if (page < pages.lastIndex) {
-                        page++
-                    } else {
-                        Log.d("OnboardingScreen", "Completed onboarding, navigating to login")
-                        navController.navigate("login") {
-                            popUpTo("onboarding") { inclusive = true }
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiaryContainer)
-                        )
-                    ),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Text(
-                    text = if (page == pages.lastIndex) "Get Started" else "Next",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                Navigation(
+                    isDarkTheme = isDarkTheme,
+                    onThemeChange = { isDarkTheme = it }
                 )
             }
+        }
+    }
 
-            Spacer(modifier = Modifier.height(8.dp))
 
-            // Skip button
-            TextButton(onClick = {
-                Log.d("OnboardingScreen", "Skip pressed, navigating to login")
-                navController.navigate("login") {
-                    popUpTo("onboarding") { inclusive = true }
-                }
-            }) {
-                Text("Skip", color = MaterialTheme.colorScheme.primary)
+    @Composable
+    fun Navigation(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
+        val navController = rememberNavController()
+        NavHost(navController = navController, startDestination = "splash") {
+            composable("splash") {
+                SplashScreen(navController = navController)
+            }
+            composable("onboarding") {
+                OnboardingScreen(navController = navController)
+            }
+            composable("login") {
+                LoginScreen(navController = navController)
+            }
+            composable("signup") {
+                SignUpScreen(navController = navController)
+            }
+            composable("home") {
+                MainScreen(
+                    onLogout = {
+                        navController.navigate("login") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    },
+                    isDarkTheme = isDarkTheme,
+                    onThemeChange = onThemeChange
+                )
             }
         }
     }
-}
 
-@Composable
-fun LoginScreen(navController: NavController) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    val SmartFitOrange = MaterialTheme.colorScheme.primary
-    val scope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
+    @Composable
+    fun SplashScreen(navController: NavController) {
+        val alpha = remember { Animatable(0f) }
 
+        LaunchedEffect(Unit) {
+            alpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 1500)
+            )
+            delay(3000L)
+            Log.d("SplashScreen", "Navigating from splash to onboarding")
+            navController.navigate("onboarding") {
+                popUpTo("splash") { inclusive = true }
+            }
+        }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            // App Title or Logo
             Image(
                 painter = painterResource(id = R.drawable.smartfitlogo),
                 contentDescription = "SmartFit Logo",
                 modifier = Modifier
-                    .size(120.dp)
-                    .padding(bottom = 16.dp)
+                    .fillMaxSize(0.6f)
+                    .alpha(alpha.value)
+            )
+        }
+    }
+
+    data class OnboardingPage(val imageRes: Int, val title: String, val description: String)
+
+    @Composable
+    fun OnboardingScreen(navController: NavController) {
+        // Data for each onboarding page
+        val pages = listOf(
+            OnboardingPage(
+                R.drawable.onboarding1,
+                "Track Your Workout",
+                "Log your daily exercises easily and stay consistent."
+            ),
+            OnboardingPage(
+                R.drawable.onboarding2,
+                "Monitor Your Progress",
+                "Visualize your performance over time with clear stats."
+            ),
+            OnboardingPage(
+                R.drawable.onboarding3,
+                "Get Health Tips",
+                "Receive daily advice to keep your body in top shape."
+            )
+        )
+
+        var page by remember { mutableStateOf(0) }
+
+        // Layout
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            // Background Image
+            Image(
+                painter = painterResource(id = pages[page].imageRes),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
 
-            Text(
-                text = "Welcome Back!",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = SmartFitOrange,
-
-                )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Email TextField
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(0.9f)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Password TextField
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(0.9f)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Login Button
-            Button(
-                onClick = {
-                    Log.d("LoginScreen", "Login clicked: email=$email")
-                    // show the video overlay for feedback then navigate
-                    scope.launch {
-                        isLoading = true
-                        // let the animation play for ~1.5 seconds (adjust as needed)
-                        kotlinx.coroutines.delay(1500)
-                        isLoading = false
-                        navController.navigate("home") {
-                            popUpTo("login") { inclusive = true }
-                        }
-                    }
-                },
+            // Overlay for text + buttons
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(25.dp))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            listOf(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.primary) // yellow → orange
-                        )
-                    ),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    .fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Login",
-                    color = Color.White,
+                    text = pages[page].title,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
-            }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = pages[page].description,
+                    color = Color.White.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
+                // Dots indicator
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    repeat(pages.size) { index ->
+                        val color =
+                            if (index == page) MaterialTheme.colorScheme.primary else Color.LightGray
+                        Box(
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .size(8.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(color)
+                        )
+                    }
+                }
 
-            // Sign Up Redirect
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "dont have an account?", color = MaterialTheme.colorScheme.secondaryContainer)
-                TextButton(onClick = {
-                    Log.d("LoginScreen", "Navigate to SignUp screen")
-                    navController.navigate("signup") }) {
+                // Next / Get Started button
+                Button(
+                    onClick = {
+                        if (page < pages.lastIndex) {
+                            page++
+                        } else {
+                            Log.d("OnboardingScreen", "Completed onboarding, navigating to login")
+                            navController.navigate("login") {
+                                popUpTo("onboarding") { inclusive = true }
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiaryContainer
+                                )
+                            )
+                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
                     Text(
-                        text = "Sign Up",
-                        color = MaterialTheme.colorScheme.primary,
+                        text = if (page == pages.lastIndex) "Get Started" else "Next",
+                        color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
                 }
-            }
-        }
 
-        // Video overlay -- using R.raw.login_anim (moved file)
-        RawVideoPlayerById(resId = R.raw.login_anim, visible = isLoading, loop = false, onFinished = {
-            // when video finishes, dismiss overlay and navigate
-            isLoading = false
-            navController.navigate("home") {
-                popUpTo("login") { inclusive = true }
-            }
-        })
-    }
-}
+                Spacer(modifier = Modifier.height(8.dp))
 
-@Composable
-fun SignUpScreen(navController: NavController) {
-    val SmartFitOrange = MaterialTheme.colorScheme.primary
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-            Text(
-                text = "Create Account",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = SmartFitOrange
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Full Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(0.9f)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(0.9f)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(0.9f)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    // Later, we’ll save this using DataStore
-                    Log.d("SignUpScreen", "SignUp clicked: name=$name, email=$email")
+                // Skip button
+                TextButton(onClick = {
+                    Log.d("OnboardingScreen", "Skip pressed, navigating to login")
                     navController.navigate("login") {
-                        popUpTo("signup") { inclusive = true }
+                        popUpTo("onboarding") { inclusive = true }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(25.dp))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiaryContainer)
-                        )
-                    ),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Text("Sign Up", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextButton(onClick = {
-                navController.popBackStack()
-            }) {
-                Text("Already have an account? Login", color = SmartFitOrange)
+                }) {
+                    Text("Skip", color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }
-}
+
+    @Composable
+    fun LoginScreen(navController: NavController) {
+        var email by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        val SmartFitOrange = MaterialTheme.colorScheme.primary
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+        val db = remember { DatabaseHelper(context) }
+
+        var isLoading by remember { mutableStateOf(false) }
 
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // App Title or Logo
+                Image(
+                    painter = painterResource(id = R.drawable.smartfitlogo),
+                    contentDescription = "SmartFit Logo",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .padding(bottom = 16.dp)
+                )
 
-@Preview(showBackground = true)
-@Composable
-fun OnboardingScreenPreview() {
-    SmartfitTheme {
-        OnboardingScreen(navController = rememberNavController())
+                Text(
+                    text = "Welcome Back!",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = SmartFitOrange,
+
+                    )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Email TextField
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Password TextField
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Login Button
+                Button(
+                    onClick = {
+                        Log.d("LoginScreen", "Login clicked: email=$email")
+
+                        val isValidUser = db.readUser(email, password)
+
+                        if (isValidUser) {
+                            isLoading = true
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Invalid email or password",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(25.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.tertiaryContainer,
+                                    MaterialTheme.colorScheme.primary
+                                ) // yellow → orange
+                            )
+                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
+                    Text(
+                        "Login",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Sign Up Redirect
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "dont have an account?",
+                        color = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                    TextButton(onClick = {
+                        Log.d("LoginScreen", "Navigate to SignUp screen")
+                        navController.navigate("signup")
+                    }) {
+                        Text(
+                            text = "Sign Up",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            // Video overlay -- using R.raw.login_anim (moved file)
+            RawVideoPlayerById(
+                resId = R.raw.login_anim,
+                visible = isLoading,
+                loop = false,
+                onFinished = {
+                    isLoading = false
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+
+        }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    SmartfitTheme {
-        LoginScreen(navController = rememberNavController())
+    @Composable
+    fun SignUpScreen(navController: NavController) {
+        val SmartFitOrange = MaterialTheme.colorScheme.primary
+        val context = LocalContext.current
+        val db = remember { DatabaseHelper(context) }
+        var name by remember { mutableStateOf("") }
+        var email by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                Text(
+                    text = "Create Account",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = SmartFitOrange
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                            Log.d("SignUpScreen", "Fields empty")
+                            return@Button
+                        }
+
+                        val result = db.insertUser(name, email, password)
+
+                        if (result != -1L) {
+                            Log.d("SignUpScreen", "User inserted successfully")
+                            navController.navigate("login") {
+                                popUpTo("signup") { inclusive = true }
+                            }
+                        } else {
+                            Log.d("SignUpScreen", "Insert failed")
+                        }
+                    },
+
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(25.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiaryContainer
+                                )
+                            )
+                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
+                    Text("Sign Up", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = {
+                    navController.popBackStack()
+                }) {
+                    Text("Already have an account? Login", color = SmartFitOrange)
+                }
+            }
+        }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-    SmartfitTheme {
-        SignUpScreen(navController = rememberNavController())
+
+    @Preview(showBackground = true)
+    @Composable
+    fun OnboardingScreenPreview() {
+        SmartfitTheme {
+            OnboardingScreen(navController = rememberNavController())
+        }
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun LoginScreenPreview() {
+        SmartfitTheme {
+            LoginScreen(navController = rememberNavController())
+        }
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun SignUpScreenPreview() {
+        SmartfitTheme {
+            SignUpScreen(navController = rememberNavController())
+        }
     }
 }
