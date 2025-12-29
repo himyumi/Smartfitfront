@@ -5,11 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.smartfit.data.api.SuggestionApiClient
 import com.example.smartfit.data.api.SuggestionDto
+import com.example.smartfit.data.repository.SuggestionRepository // Import your new Repo
 import kotlinx.coroutines.launch
 
 class SuggestionViewModel : ViewModel() {
+
+    // 1. Initialize the Repository
+    private val repository = SuggestionRepository()
+
     var suggestions by mutableStateOf<List<SuggestionDto>>(emptyList())
         private set
     var isLoading by mutableStateOf(false)
@@ -19,29 +23,34 @@ class SuggestionViewModel : ViewModel() {
 
     fun fetchSuggestions(bmiCategory: String) {
         if (bmiCategory.isEmpty()) return
+
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
             try {
-                // 1. Fetch from API
-                val response = SuggestionApiClient.service.getAllSuggestions()
+                // 2. USE THE REPOSITORY HERE (Instead of SuggestionApiClient directly)
+                val responseMap = repository.getSuggestions()
 
-                // 2. Map "Normal" -> "Normal weight" to match JSON keys
-                val key = when {
-                    bmiCategory.contains("Underweight", true) -> "Underweight"
-                    bmiCategory.contains("Normal", true) -> "Normal"
-                    bmiCategory.contains("Overweight", true) -> "Overweight"
-                    bmiCategory.contains("Obese", true) -> "Obese"
-                    else -> "Normal"
-                }
+                // Map the category logic
+                val key = mapBmiToJsonKey(bmiCategory)
+                suggestions = responseMap[key] ?: emptyList()
 
-                suggestions = response[key] ?: emptyList()
-            } catch (e: Throwable) { // <--- CHANGED FROM Exception TO Throwable
+            } catch (e: Exception) {
                 e.printStackTrace()
-                errorMessage = "Error: ${e.message}"
+                errorMessage = "Failed to load suggestions. Check connection."
             } finally {
                 isLoading = false
             }
+        }
+    }
+
+    private fun mapBmiToJsonKey(appCategory: String): String {
+        return when {
+            appCategory.contains("Underweight", true) -> "Underweight"
+            appCategory.contains("Normal", true) -> "Normal"
+            appCategory.contains("Overweight", true) -> "Overweight"
+            appCategory.contains("Obese", true) -> "Obese"
+            else -> "Normal"
         }
     }
 }

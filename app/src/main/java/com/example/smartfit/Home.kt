@@ -1,6 +1,6 @@
 package com.example.smartfit
 
-
+import coil.compose.AsyncImage
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -517,6 +517,25 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+
+
+                            suggestion.imageUrl?.let {
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                AsyncImage(
+                                    model = it,
+                                    contentDescription = suggestion.title,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+
                             if (expanded) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(text = suggestion.description)
