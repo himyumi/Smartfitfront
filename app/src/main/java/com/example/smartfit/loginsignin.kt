@@ -54,6 +54,7 @@ import android.util.Log
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.example.smartfit.ui.RawVideoPlayerById
+import com.example.smartfit.viewmodel.AuthViewModel
 
 class LoginSignInScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -241,13 +242,16 @@ fun OnboardingScreen(navController: NavController) {
 }
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val SmartFitOrange = MaterialTheme.colorScheme.primary
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
-
+    var errorMessage by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -261,7 +265,7 @@ fun LoginScreen(navController: NavController) {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // App Title or Logo
+
             Image(
                 painter = painterResource(id = R.drawable.smartfitlogo),
                 contentDescription = "SmartFit Logo",
@@ -273,13 +277,11 @@ fun LoginScreen(navController: NavController) {
             Text(
                 text = "Welcome Back!",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = SmartFitOrange,
-
-                )
+                color = SmartFitOrange
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Email TextField
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -290,7 +292,6 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password TextField
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -300,23 +301,33 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(0.9f)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            if (errorMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Login Button
             Button(
                 onClick = {
                     Log.d("LoginScreen", "Login clicked: email=$email")
-                    // show the video overlay for feedback then navigate
-                    scope.launch {
-                        isLoading = true
-                        // let the animation play for ~1.5 seconds (adjust as needed)
-                        kotlinx.coroutines.delay(1500)
-                        isLoading = false
-                        navController.navigate("home") {
-                            popUpTo("login") { inclusive = true }
+
+                    viewModel.login(email, password) { success ->
+                        if (success) {
+                            scope.launch {
+                                isLoading = true
+                                kotlinx.coroutines.delay(1500)
+                                isLoading = false
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        } else {
+                            errorMessage = "Invalid email or password"
                         }
                     }
                 },
@@ -326,7 +337,10 @@ fun LoginScreen(navController: NavController) {
                     .clip(RoundedCornerShape(25.dp))
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.primary) // yellow → orange
+                            listOf(
+                                MaterialTheme.colorScheme.tertiaryContainer,
+                                MaterialTheme.colorScheme.primary
+                            )
                         )
                     ),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
@@ -340,15 +354,17 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sign Up Redirect
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "dont have an account?", color = MaterialTheme.colorScheme.secondaryContainer)
+                Text(
+                    text = "dont have an account?",
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                )
                 TextButton(onClick = {
-                    Log.d("LoginScreen", "Navigate to SignUp screen")
-                    navController.navigate("signup") }) {
+                    navController.navigate("signup")
+                }) {
                     Text(
                         text = "Sign Up",
                         color = MaterialTheme.colorScheme.primary,
@@ -358,23 +374,29 @@ fun LoginScreen(navController: NavController) {
             }
         }
 
-        // Video overlay -- using R.raw.login_anim (moved file)
-        RawVideoPlayerById(resId = R.raw.login_anim, visible = isLoading, loop = false, onFinished = {
-            // when video finishes, dismiss overlay and navigate
-            isLoading = false
-            navController.navigate("home") {
-                popUpTo("login") { inclusive = true }
+        RawVideoPlayerById(
+            resId = R.raw.login_anim,
+            visible = isLoading,
+            loop = false,
+            onFinished = {
+                isLoading = false
             }
-        })
+        )
     }
 }
 
+
 @Composable
-fun SignUpScreen(navController: NavController) {
+fun SignUpScreen(
+    navController: NavController,
+    viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel() // ✅ ADDED
+) {
     val SmartFitOrange = MaterialTheme.colorScheme.primary
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }   // ✅ ADDED
+    var successMessage by remember { mutableStateOf("") } // ✅ ADDED
 
     Box(
         modifier = Modifier
@@ -422,14 +444,43 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(0.9f)
             )
 
+            if (errorMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            if (successMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = successMessage,
+                    color = Color.Green,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    // Later, we’ll save this using DataStore
                     Log.d("SignUpScreen", "SignUp clicked: name=$name, email=$email")
-                    navController.navigate("login") {
-                        popUpTo("signup") { inclusive = true }
+
+                    viewModel.register(name, email, password) { success ->
+                        if (success) {
+                            successMessage = "Account created successfully"
+                            errorMessage = ""
+
+                            // small delay so user sees success message
+                            navController.navigate("login") {
+                                popUpTo("signup") { inclusive = true }
+                            }
+                        } else {
+                            errorMessage = "Email already registered"
+                            successMessage = ""
+                        }
                     }
                 },
                 modifier = Modifier
@@ -438,7 +489,10 @@ fun SignUpScreen(navController: NavController) {
                     .clip(RoundedCornerShape(25.dp))
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiaryContainer)
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiaryContainer
+                            )
                         )
                     ),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
@@ -456,7 +510,6 @@ fun SignUpScreen(navController: NavController) {
         }
     }
 }
-
 
 
 @Preview(showBackground = true)
