@@ -84,10 +84,12 @@ import androidx.compose.material.icons.filled.*
 import android.util.Log
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
+import coil.compose.AsyncImage
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.*
+
 // ^ Ensure icons are imported
 
 
@@ -101,7 +103,8 @@ class MainActivity2 : ComponentActivity() {
                 MainScreen(
                     onLogout = { /* Handle logout */ },
                     onThemeChange = { isDarkTheme = it },
-                    isDarkTheme = isDarkTheme
+                    isDarkTheme = isDarkTheme,
+                    userName = "James"
                 )
             }
         }
@@ -109,7 +112,7 @@ class MainActivity2 : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkTheme: Boolean) {
+fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkTheme: Boolean, userName: String) {
     val navController = rememberNavController()
     val activities = remember { mutableStateOf(listOf<ActivityItem>()) }
     var stepsGoal by remember { mutableStateOf(0) }
@@ -161,7 +164,8 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                     navController = navController,
                     bmiCategoryFromProfile = "",
                     activities = activities.value,
-                    stepsGoal = stepsGoal
+                    stepsGoal = stepsGoal,
+                    userName = userName
                 )
             }
             composable("home/{bmiCategory}") { backStackEntry ->
@@ -169,7 +173,8 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                     navController = navController,
                     bmiCategoryFromProfile = backStackEntry.arguments?.getString("bmiCategory") ?: "",
                     activities = activities.value,
-                    stepsGoal = stepsGoal
+                    stepsGoal = stepsGoal,
+                    userName = userName
                 )
             }
             composable("goals") {
@@ -213,6 +218,7 @@ fun HomeScreen(
     bmiCategoryFromProfile: String,
     activities: List<ActivityItem>,
     stepsGoal: Int,
+    userName: String,
     viewModel: SuggestionViewModel = viewModel()
 ) {
 
@@ -279,7 +285,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.width(2.dp))
 
                     Text(
-                        text = "James",
+                        text = "$userName!",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
@@ -517,6 +523,25 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+
+
+                            suggestion.imageUrl?.let {
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                AsyncImage(
+                                    model = it,
+                                    contentDescription = suggestion.title,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+
                             if (expanded) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(text = suggestion.description)
@@ -1211,7 +1236,7 @@ private fun SummaryRow(label: String, value: String, labelStyle: androidx.compos
 @Composable
 fun MainScreenPreview() {
     SmartfitTheme {
-        MainScreen(onLogout = {}, onThemeChange = {}, isDarkTheme = false)
+        MainScreen(onLogout = {}, onThemeChange = {}, isDarkTheme = false, userName = "")
     }
 }
 

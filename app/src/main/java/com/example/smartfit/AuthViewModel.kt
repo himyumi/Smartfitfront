@@ -11,6 +11,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val userDao = AppDatabase.getDatabase(application).userDao()
 
+    suspend fun getUserByEmail(email: String): User? {
+        return userDao.getUserByEmail(email)
+    }
     fun register(
         name: String,
         email: String,

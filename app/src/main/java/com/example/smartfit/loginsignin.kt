@@ -55,6 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.example.smartfit.ui.RawVideoPlayerById
 import com.example.smartfit.viewmodel.AuthViewModel
+import com.example.smartfit.data.User
 
 class LoginSignInScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,7 +86,19 @@ fun Navigation(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
         composable("signup") {
             SignUpScreen(navController = navController)
         }
-        composable("home") {
+        composable(
+            route = "home/{userName}", // 1. Add the argument to the route
+            arguments = listOf(
+                androidx.navigation.navArgument("userName") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = "User" // Optional default
+                }
+            )
+        ) { backStackEntry ->
+            // 2. Retrieve the argument
+            val userName = backStackEntry.arguments?.getString("userName") ?: "User"
+
+            // 3. Pass it to MainScreen
             MainScreen(
                 onLogout = {
                     navController.navigate("login") {
@@ -93,7 +106,8 @@ fun Navigation(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
                     }
                 },
                 isDarkTheme = isDarkTheme,
-                onThemeChange = onThemeChange
+                onThemeChange = onThemeChange,
+                userName = userName // <--- Pass data here
             )
         }
     }
@@ -316,13 +330,25 @@ fun LoginScreen(
                 onClick = {
                     Log.d("LoginScreen", "Login clicked: email=$email")
 
+
+
                     viewModel.login(email, password) { success ->
                         if (success) {
+                            Log.d("LoginScreen", "Login successful")
+
                             scope.launch {
-                                isLoading = true
+                                isLoading = true // Start loading animation
+
+                                // 1. Fetch User (Suspend function works here)
+                                val user = viewModel.getUserByEmail(email)
+                                val safeName = user?.name ?: "User"
+
+                                // 2. Wait for animation (optional)
                                 kotlinx.coroutines.delay(1500)
                                 isLoading = false
-                                navController.navigate("home") {
+
+                                // 3. Navigate
+                                navController.navigate("home/$safeName") {
                                     popUpTo("login") { inclusive = true }
                                 }
                             }

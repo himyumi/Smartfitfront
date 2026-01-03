@@ -9,12 +9,13 @@ import retrofit2.http.GET
 data class SuggestionDto(
     val title: String,
     val description: String,
-    val icon: String
+    val icon: String,
+    val imageUrl: String? = null
 )
 
 // 2. The Connection Interface
 interface SuggestionApiService {
-    @GET("https://gist.githubusercontent.com/himyumi/7671601b0b3004b885fb981d8e9db55c/raw/35936d7d0b8fd2cc2e7d333516aad411a9ac6f3a/gistfile1.txt")
+    @GET("https://gist.githubusercontent.com/himyumi/7671601b0b3004b885fb981d8e9db55c/raw/590708427650ede91ba96fe7946c9b7833b582a3/gistfile1.txt")
     suspend fun getAllSuggestions(): Map<String, List<SuggestionDto>>
 }
 
