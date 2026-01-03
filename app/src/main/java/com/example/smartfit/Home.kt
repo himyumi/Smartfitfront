@@ -89,6 +89,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+
+
 
 // ^ Ensure icons are imported
 
@@ -99,12 +105,25 @@ class MainActivity2 : ComponentActivity() {
         setContent {
             val systemTheme = isSystemInDarkTheme()
             var isDarkTheme by remember { mutableStateOf(systemTheme) }
+
+            // 1. 👇 ADD THIS BLOCK TO LOAD THE SAVED NAME
+            val context = LocalContext.current
+            val sharedPref = remember { context.getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE) }
+            // If no name is found, default to "User"
+            val savedName = remember { sharedPref.getString("saved_name", "User") ?: "User" }
+
             SmartfitTheme(darkTheme = isDarkTheme) {
                 MainScreen(
-                    onLogout = { /* Handle logout */ },
+                    onLogout = {
+                        // Optional: Clear data on logout
+                        sharedPref.edit().clear().apply()
+                        finish() // Close this activity to go back to Login
+                    },
                     onThemeChange = { isDarkTheme = it },
                     isDarkTheme = isDarkTheme,
-                    userName = "James"
+
+                    // 2. 👇 PASS THE VARIABLE HERE INSTEAD OF "James"
+                    userName = savedName
                 )
             }
         }
@@ -118,6 +137,9 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
     var stepsGoal by remember { mutableStateOf(0) }
     var caloriesGoal by remember { mutableStateOf(0) }
     var waterGoal by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+    val dataStore = remember { com.example.smartfit.data.PreferenceDataStore(context) }
+    val scope = rememberCoroutineScope() // Needed to save data
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -181,9 +203,15 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                 DailyGoalsScreen(
                     navController = navController,
                     onSaveGoals = { steps, calories, water ->
+                        // 1. Update UI
                         stepsGoal = steps
                         caloriesGoal = calories
                         waterGoal = water
+
+                        // 2. THIS IS WHAT WAS DELETED: Save to DataStore
+                        scope.launch {
+                            dataStore.saveGoals(steps, calories, water)
+                        }
                     }
                 )
             }
@@ -222,16 +250,26 @@ fun HomeScreen(
     viewModel: SuggestionViewModel = viewModel()
 ) {
 
-    LaunchedEffect(bmiCategoryFromProfile) {
-        if (bmiCategoryFromProfile.isNotEmpty()) {
-            viewModel.fetchSuggestions(bmiCategoryFromProfile)
+
+    val context = LocalContext.current
+    val prefs = remember { com.example.smartfit.data.PreferenceDataStore(context) }
+    val savedBmi by prefs.bmiFlow.collectAsState(initial = "")
+
+// Prefer the value passed from Profile (instant update),
+// otherwise fall back to saved DataStore value
+    val actualBmiCategory =
+        navController.currentBackStackEntry
+            ?.savedStateHandle
+            ?.get<String>("bmiCategory")
+            ?: savedBmi
+
+    LaunchedEffect(actualBmiCategory) {
+        if (actualBmiCategory.isNotEmpty()) {
+            viewModel.fetchSuggestions(actualBmiCategory)
         }
     }
 
-    val bmiCategoryFromProfile =
-        navController.currentBackStackEntry
-            ?.savedStateHandle
-            ?.get<String>("bmiCategory") ?: bmiCategoryFromProfile
+
 
     val scrollState = rememberScrollState()
     var steps by remember { mutableStateOf(0) }
@@ -468,15 +506,15 @@ fun HomeScreen(
             // 1. Trigger API call when entering this tab
             // We use 'Unit' key to force it to check every time the tab is opened
             LaunchedEffect(Unit) {
-                if (bmiCategoryFromProfile.isNotEmpty()) {
-                    viewModel.fetchSuggestions(bmiCategoryFromProfile)
+                if (actualBmiCategory.isNotEmpty()) {
+                    viewModel.fetchSuggestions(actualBmiCategory)
                 }
             }
 
             // 2. DEBUG TEXT: This will tell you if the data arrived
             Text(
-                text = if (bmiCategoryFromProfile.isEmpty()) "Status: No BMI Data" else "Status: $bmiCategoryFromProfile",
-                color = if (bmiCategoryFromProfile.isEmpty()) Color.Red else Color.Green,
+                text = if (actualBmiCategory.isEmpty()) "Status: No BMI Data" else "Status: $actualBmiCategory",
+                color = if (actualBmiCategory.isEmpty()) Color.Red else Color.Green,
                 fontSize = 12.sp
             )
 
@@ -490,7 +528,7 @@ fun HomeScreen(
             }
             else if (viewModel.errorMessage != null) {
                 Text(text = "Error: ${viewModel.errorMessage}", color = Color.Red)
-                Button(onClick = { viewModel.fetchSuggestions(bmiCategoryFromProfile) }) { Text("Retry") }
+                Button(onClick = { viewModel.fetchSuggestions(actualBmiCategory) }) { Text("Retry") }
             }
             else if (viewModel.suggestions.isNotEmpty()) {
                 // Display the list
@@ -551,7 +589,7 @@ fun HomeScreen(
                 }
             } else {
                 // If category exists but list is empty (API loading issue)
-                if (bmiCategoryFromProfile.isNotEmpty()) {
+                if (actualBmiCategory.isEmpty()) {
                     Text("Loading suggestions...", color = Color.Gray)
                 } else {
                     Text("Go to Profile -> Enter Height/Weight -> Click Save.", color = Color.Gray)
@@ -967,6 +1005,10 @@ fun ProfileScreen(
     var weight by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // Initialize your new DataStore class
+    val prefs = remember { com.example.smartfit.data.PreferenceDataStore(context) }
     // BMI Calculation Logic (Hidden calculation, can be used if needed)
     val bmi by remember {
         derivedStateOf {
@@ -1045,12 +1087,18 @@ fun ProfileScreen(
         Button(
             onClick = {
                 val category = getBmiCategory(weight, height)
+
+                // SAVE to DataStore (persists after restart)
+                scope.launch {
+                    prefs.saveBmi(category)
+                }
+
+                // Still pass it back so Home updates instantly
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set("bmiCategory", category)
 
                 navController.popBackStack()
-                Log.d("ProfileScreen", "BMI Category saved: $category")
             },
             modifier = Modifier
                 .fillMaxWidth()
