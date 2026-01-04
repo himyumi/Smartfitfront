@@ -1,15 +1,19 @@
 package com.example.smartfit.data
 
 import android.content.Context
-import androidx.compose.ui.input.key.type
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.smartfit.ActivityItem // Make sure this is imported
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 val Context.appPrefs by preferencesDataStore("smartfit_prefs")
 
 class PreferenceDataStore(private val context: Context) {
+
+    private val gson = Gson()
 
     companion object {
         private val DARK_MODE = booleanPreferencesKey("dark_mode")
@@ -18,6 +22,8 @@ class PreferenceDataStore(private val context: Context) {
         private val STEPS_GOAL = intPreferencesKey("steps_goal")
         private val CAL_GOAL = intPreferencesKey("calories_goal")
         private val WATER_GOAL = intPreferencesKey("water_goal")
+
+        private val SAVED_ACTIVITIES = stringPreferencesKey("saved_activities")
     }
 
     // ---------- THEME ----------
@@ -45,6 +51,7 @@ class PreferenceDataStore(private val context: Context) {
         }
     }
 
+
     val goalsFlow: Flow<Triple<Int, Int, Int>> =
         context.appPrefs.data.map {
             Triple(
@@ -53,5 +60,26 @@ class PreferenceDataStore(private val context: Context) {
                 it[WATER_GOAL] ?: 0
             )
         }
+
+
+    // ---------- NEW: ACTIVITIES ----------
+
+    // 1. Save List (Convert List -> JSON String)
+    suspend fun saveActivities(activities: List<ActivityItem>) {
+        val jsonString = gson.toJson(activities)
+        context.appPrefs.edit { it[SAVED_ACTIVITIES] = jsonString }
+    }
+
+    // 2. Get List (Convert JSON String -> List)
+    val activitiesFlow: Flow<List<ActivityItem>> = context.appPrefs.data.map { preferences ->
+        val jsonString = preferences[SAVED_ACTIVITIES] ?: ""
+        if (jsonString.isNotEmpty()) {
+            val type = object : TypeToken<List<ActivityItem>>() {}.type
+            gson.fromJson(jsonString, type)
+        } else {
+            emptyList()
+        }
+    }
 }
+
 

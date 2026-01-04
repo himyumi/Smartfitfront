@@ -133,13 +133,39 @@ class MainActivity2 : ComponentActivity() {
 @Composable
 fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkTheme: Boolean, userName: String) {
     val navController = rememberNavController()
-    val activities = remember { mutableStateOf(listOf<ActivityItem>()) }
-    var stepsGoal by remember { mutableStateOf(0) }
-    var caloriesGoal by remember { mutableStateOf(0) }
-    var waterGoal by remember { mutableStateOf(0) }
     val context = LocalContext.current
-    val dataStore = remember { com.example.smartfit.data.PreferenceDataStore(context) }
-    val scope = rememberCoroutineScope() // Needed to save data
+    val scope = rememberCoroutineScope() // Needed to launch save functions
+
+    // 1. Initialize DataStore
+    val prefs = remember { com.example.smartfit.data.PreferenceDataStore(context) }
+
+    // 2. READ DATA (Observe changes automatically)
+    // Theme
+    val savedTheme by prefs.themeFlow.collectAsState(initial = isSystemInDarkTheme())
+    // BMI (For suggestions)
+    val savedBmi by prefs.bmiFlow.collectAsState(initial = "")
+    // Goals (Returns a Triple: Steps, Calories, Water)
+    val savedGoals by prefs.goalsFlow.collectAsState(initial = Triple(0,0,0))
+    // Activities
+    val savedActivities by prefs.activitiesFlow.collectAsState(initial = emptyList())
+
+    // 3. SYNC DATA TO LOCAL STATE
+    // We sync the DataStore activities to your local mutable state
+    val activities = remember { mutableStateOf(listOf<ActivityItem>()) }
+
+    // When app opens, load saved activities into the list
+    LaunchedEffect(savedActivities) {
+        if (activities.value.isEmpty() && savedActivities.isNotEmpty()) {
+            activities.value = savedActivities
+        }
+    }
+
+    // Set Steps Goal from saved data (Default to 5000 if 0)
+    var stepsGoal = if (savedGoals.first != 0) savedGoals.first else 5000
+
+    // Force the theme to update based on DataStore
+    val finalTheme = savedTheme // You can use this to override 'isDarkTheme' if you want persistent theme
+
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -184,12 +210,14 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
             composable("home") {
                 HomeScreen(
                     navController = navController,
-                    bmiCategoryFromProfile = "",
+                    // Use savedBmi from DataStore, and match the parameter name 'bmiCategoryFromProfile'
+                    bmiCategoryFromProfile = savedBmi,
                     activities = activities.value,
                     stepsGoal = stepsGoal,
                     userName = userName
                 )
             }
+
             composable("home/{bmiCategory}") { backStackEntry ->
                 HomeScreen(
                     navController = navController,
@@ -199,30 +227,51 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                     userName = userName
                 )
             }
+
             composable("goals") {
                 DailyGoalsScreen(
                     navController = navController,
                     onSaveGoals = { steps, calories, water ->
-                        // 1. Update UI
-                        stepsGoal = steps
-                        caloriesGoal = calories
-                        waterGoal = water
-
-                        // 2. THIS IS WHAT WAS DELETED: Save to DataStore
+                        // 1. Save to DataStore
                         scope.launch {
-                            dataStore.saveGoals(steps, calories, water)
+                            prefs.saveGoals(steps, calories, water)
+                        }
+                        // 2. Update local goal immediately for UI
+                        stepsGoal = steps
+                    }
+                )
+            }
+
+            composable("activity_log") {
+                ActivityLogScreen(
+                    activities = activities.value,
+                    onActivitiesChange = { newActivityList ->
+                        // 1. Update UI
+                        activities.value = newActivityList
+                        // 2. Save to DataStore (JSON)
+                        scope.launch {
+                            prefs.saveActivities(newActivityList)
                         }
                     }
                 )
             }
-            composable("activity_log") {
-                ActivityLogScreen(
-                    activities = activities.value,
-                    onActivitiesChange = { activities.value = it }
-                )
+
+            composable("profile") {                ProfileScreen(
+                navController = navController,
+                onLogout = onLogout,
+                isDarkTheme = finalTheme,
+                onThemeChange = { isDark ->
+                    // Save Theme
+                    scope.launch { prefs.saveTheme(isDark) }
+                    onThemeChange(isDark) // Update app state
+                },
+                onBmiChange = { newCategory ->
+                    // Save BMI
+                    scope.launch { prefs.saveBmi(newCategory) }
+                }
+            )
             }
 
-            composable("profile") { ProfileScreen(navController, onLogout, isDarkTheme, onThemeChange) }
             composable(
                 route = "savedGoals/{steps}/{calories}/{water}",
                 arguments = listOf(
@@ -254,6 +303,8 @@ fun HomeScreen(
     val context = LocalContext.current
     val prefs = remember { com.example.smartfit.data.PreferenceDataStore(context) }
     val savedBmi by prefs.bmiFlow.collectAsState(initial = "")
+
+
 
 // Prefer the value passed from Profile (instant update),
 // otherwise fall back to saved DataStore value
@@ -999,7 +1050,8 @@ fun ProfileScreen(
     navController: NavController,
     onLogout: () -> Unit,
     isDarkTheme: Boolean,
-    onThemeChange: (Boolean) -> Unit
+    onThemeChange: (Boolean) -> Unit,
+    onBmiChange: (String) -> Unit
 ) {
     // State variables
     var weight by remember { mutableStateOf("") }
@@ -1197,58 +1249,13 @@ fun getBmiCategory(weight: String, height: String): String {
 }
 
 
-data class Suggestion(val title: String, val description: String)
+data class Suggestion(
+    val title: String,
+    val description: String,
+    val icon: String,
+    val imageUrl: String? = null
+)
 
-fun getSuggestionDetails(bmiCategory: String): List<Suggestion> {
-    return when (bmiCategory) {
-
-        "Underweight" -> listOf(
-            Suggestion(
-                "Increase calorie intake",
-                "Add healthy snacks like nuts, smoothies, and yogurt between meals."
-            ),
-            Suggestion(
-                "Light strength training",
-                "Focus on full-body workouts 2–3 times per week to build muscle safely."
-            )
-        )
-
-        "Normal" -> listOf(
-            Suggestion(
-                "Stay consistent",
-                "30 minutes of moderate exercise most days keeps metabolism balanced."
-            ),
-            Suggestion(
-                "Balanced strength workout",
-                "Alternate upper-body, lower-body, and core exercises each session."
-            )
-        )
-
-        "Overweight" -> listOf(
-            Suggestion(
-                "Low-impact cardio",
-                "Walking, cycling, or swimming burns fat while protecting joints."
-            ),
-            Suggestion(
-                "Reduce sugar intake",
-                "Replace soda and sweets with water, fruit, or unsweetened drinks."
-            )
-        )
-
-        "Obese" -> listOf(
-            Suggestion(
-                "Short frequent walks",
-                "Start with 10 minutes twice a day, then increase slowly."
-            ),
-            Suggestion(
-                "Healthy portion control",
-                "Use smaller plates and fill half your plate with vegetables."
-            )
-        )
-
-        else -> emptyList()
-    }
-}
 
 @Composable
 fun SummaryTab(activities: List<ActivityItem>, modifier: Modifier = Modifier) {
