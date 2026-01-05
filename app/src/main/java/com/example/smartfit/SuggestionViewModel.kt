@@ -21,6 +21,10 @@ class SuggestionViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    fun clearSuggestions() {
+        suggestions = emptyList()
+        errorMessage = null
+    }
     fun fetchSuggestions(bmiCategory: String) {
         if (bmiCategory.isEmpty()) return
 
@@ -53,4 +57,5 @@ class SuggestionViewModel : ViewModel() {
             else -> "Normal"
         }
     }
+
 }

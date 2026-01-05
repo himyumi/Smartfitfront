@@ -70,6 +70,7 @@ class PreferenceDataStore(private val context: Context) {
         context.appPrefs.edit { it[SAVED_ACTIVITIES] = jsonString }
     }
 
+
     // 2. Get List (Convert JSON String -> List)
     val activitiesFlow: Flow<List<ActivityItem>> = context.appPrefs.data.map { preferences ->
         val jsonString = preferences[SAVED_ACTIVITIES] ?: ""
@@ -80,6 +81,12 @@ class PreferenceDataStore(private val context: Context) {
             emptyList()
         }
     }
+    suspend fun clearBmi() {
+        context.appPrefs.edit {
+            it.remove(BMI_CATEGORY)
+        }
+    }
 }
+
 
 

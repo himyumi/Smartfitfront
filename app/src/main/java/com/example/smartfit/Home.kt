@@ -256,20 +256,25 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                 )
             }
 
-            composable("profile") {                ProfileScreen(
-                navController = navController,
-                onLogout = onLogout,
-                isDarkTheme = finalTheme,
-                onThemeChange = { isDark ->
-                    // Save Theme
-                    scope.launch { prefs.saveTheme(isDark) }
-                    onThemeChange(isDark) // Update app state
-                },
-                onBmiChange = { newCategory ->
-                    // Save BMI
-                    scope.launch { prefs.saveBmi(newCategory) }
-                }
-            )
+            composable("profile") {
+                ProfileScreen(
+                    navController = navController,
+                    onLogout = onLogout,
+                    isDarkTheme = finalTheme,
+                    onThemeChange = { isDark ->
+                        scope.launch { prefs.saveTheme(isDark) }
+                        onThemeChange(isDark)
+                    },
+                    onBmiChange = { newCategory ->
+                        scope.launch { prefs.saveBmi(newCategory) }
+                    },
+                    onResetBmi = {
+                        scope.launch {
+                            prefs.clearBmi()
+                        }
+                    },
+                    userName = userName
+                )
             }
 
             composable(
@@ -317,6 +322,8 @@ fun HomeScreen(
     LaunchedEffect(actualBmiCategory) {
         if (actualBmiCategory.isNotEmpty()) {
             viewModel.fetchSuggestions(actualBmiCategory)
+        } else {
+            viewModel.clearSuggestions()
         }
     }
 
@@ -1051,7 +1058,9 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     isDarkTheme: Boolean,
     onThemeChange: (Boolean) -> Unit,
-    onBmiChange: (String) -> Unit
+    onBmiChange: (String) -> Unit,
+    onResetBmi: () -> Unit,
+    userName: String
 ) {
     // State variables
     var weight by remember { mutableStateOf("") }
@@ -1158,6 +1167,37 @@ fun ProfileScreen(
             shape = RoundedCornerShape(30.dp)
         ) {
             Text("Save", fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+// --- RESET BMI BUTTON ---
+        androidx.compose.material3.OutlinedButton(
+            onClick = {
+                // 1. Clear the local text fields
+                height = ""
+                weight = ""
+
+                // 2. Trigger the reset logic (Clears DataStore)
+                onResetBmi()
+
+                // 3. Force Home Screen to update immediately
+                // This removes the "bmiCategory" data currently being held by navigation
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.remove<String>("bmiCategory")
+
+                // 4. Show confirmation
+                android.widget.Toast.makeText(context, "BMI Data Cleared", android.widget.Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            shape = RoundedCornerShape(30.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error // Red text
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+        ) {
+            Text("Reset BMI Data")
         }
 
 
