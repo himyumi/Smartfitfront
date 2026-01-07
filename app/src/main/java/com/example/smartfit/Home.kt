@@ -161,7 +161,7 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
     }
 
     // Set Steps Goal from saved data (Default to 5000 if 0)
-    var stepsGoal = if (savedGoals.first != 0) savedGoals.first else 5000
+    val stepsGoal = if (savedGoals.first != 0) savedGoals.first else 5000
 
     // Force the theme to update based on DataStore
     val finalTheme = savedTheme // You can use this to override 'isDarkTheme' if you want persistent theme
@@ -236,8 +236,7 @@ fun MainScreen(onLogout: () -> Unit, onThemeChange: (Boolean) -> Unit, isDarkThe
                         scope.launch {
                             prefs.saveGoals(steps, calories, water)
                         }
-                        // 2. Update local goal immediately for UI
-                        stepsGoal = steps
+
                     }
                 )
             }
@@ -663,12 +662,23 @@ fun HomeScreen(
 @Composable
 fun DailyGoalsScreen(
     navController: NavController,
-    onSaveGoals: (Int, Int, Int) -> Unit
+    onSaveGoals: (Int, Int, Int) -> Unit,
 ) {
-    var stepsGoal by remember { mutableStateOf("") }
-    var caloriesGoal by remember { mutableStateOf("") }
-    var waterGoal by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val prefs = remember { com.example.smartfit.data.PreferenceDataStore(context) }
+    val savedGoals by prefs.goalsFlow.collectAsState(initial = Triple(0,0,0))
+
+    var stepsGoal by remember { mutableStateOf(savedGoals.first.toString()) }
+    var caloriesGoal by remember { mutableStateOf(savedGoals.second.toString()) }
+    var waterGoal by remember { mutableStateOf(savedGoals.third.toString()) }
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(savedGoals) {
+        stepsGoal = savedGoals.first.takeIf { it != 0 }?.toString() ?: ""
+        caloriesGoal = savedGoals.second.takeIf { it != 0 }?.toString() ?: ""
+        waterGoal = savedGoals.third.takeIf { it != 0 }?.toString() ?: ""
+    }
 
     Image(
         painter = painterResource(id = R.drawable.background2),
@@ -806,13 +816,16 @@ fun DailyGoalsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        onSaveGoals(
-                            stepsGoal.toIntOrNull() ?: 0,
-                            caloriesGoal.toIntOrNull() ?: 0,
-                            waterGoal.toIntOrNull() ?: 0
-                        )
+                        val s = stepsGoal.toIntOrNull() ?: 0
+                        val c = caloriesGoal.toIntOrNull() ?: 0
+                        val w = waterGoal.toIntOrNull() ?: 0
 
-                        navController.navigate("savedGoals/${stepsGoal}/${caloriesGoal}/${waterGoal}")
+                        // 1. Update MainScreen state
+                        onSaveGoals(s, c, w)
+
+
+                        // 3. Navigate
+                        navController.navigate("savedGoals/$s/$c/$w")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
